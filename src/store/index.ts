@@ -4,8 +4,14 @@ import Vuex from 'vuex'
 Vue.use(Vuex)
 
 export default new Vuex.Store({
-  state: {},
-  mutations: {},
+  state: {
+    draw: null
+  },
+  mutations: {
+    setDraw(state, draw) {
+      state.draw = draw
+    }
+  },
   actions: {},
   modules: {}
 })

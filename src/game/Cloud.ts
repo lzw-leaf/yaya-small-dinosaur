@@ -1,6 +1,6 @@
-import {getRandomNum} from '@/utils'
+import { getRandomNum } from '@/utils'
 import imageSprite from './ImageSprite'
-import {Sprite} from './types'
+import { Sprite } from './types'
 
 /**
  * 云朵

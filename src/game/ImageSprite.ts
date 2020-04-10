@@ -1,4 +1,4 @@
-import {appendAsyncConstructor} from 'async-constructor'
+import { appendAsyncConstructor } from 'async-constructor'
 class ImageSprite {
   image: HTMLImageElement = new Image()
 

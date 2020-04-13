@@ -1,12 +1,19 @@
 <template>
   <div id="app">
-    <canvas width="600" height="150" ref="gameRef" :style="gameCanvasStyle"></canvas>
+    <canvas
+      class="app__game"
+      :width="config.CANVAS_WIDTH"
+      :height="config.CANVAS_HEIGHT"
+      ref="gameRef"
+      :style="gameCanvasStyle"
+    ></canvas>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Ref } from 'vue-property-decorator'
 import Game from './game'
+import ImageSprite from './game/ImageSprite'
 
 @Component
 export default class App extends Vue {
@@ -15,8 +22,8 @@ export default class App extends Vue {
   magnification = 1
 
   config = {
-    CANVAS_WIDTH: 600,
-    CANVAS_HEIGHT: 150
+    CANVAS_WIDTH: 1200,
+    CANVAS_HEIGHT: 300
   }
 
   get gameCanvasStyle() {
@@ -33,6 +40,7 @@ export default class App extends Vue {
     window.game.init()
   }
   async mounted() {
+    await new ImageSprite()
     this.start()
     window.onresize = () => (this.magnification = window.innerWidth / 600)
   }
@@ -47,5 +55,9 @@ export default class App extends Vue {
   display: flex;
   align-items: center;
   justify-content: center;
+  .app__game {
+    width: 600px;
+    height: 150px;
+  }
 }
 </style>

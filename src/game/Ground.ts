@@ -10,28 +10,20 @@ import { Sprite } from './types'
  * @constructor
  */
 export default class Ground {
-  /**
-   * Ground config.
-   * @enum {number}
-   */
-  static config = {
-    WIDTH: 600,
-    HEIGHT: 12,
-    YPOS: 127
-  }
-  // 容器中的尺寸
-  dimensions = Ground.config
+  // 地面的精灵图位置
+  static sprite: Sprite = { X: 0, Y: 110, WIDTH: 1200, HEIGHT: 24 }
+
   // 容器中的双图X轴起点列表 [image1X,image2X]
-  xPosList = [0, Ground.config.WIDTH]
-  // 精灵图的尺寸
-  spriteDimensions = Ground.config
+  xPosList = [Ground.sprite.X, Ground.sprite.WIDTH]
+  Y = 254
   // 精灵图的双图X轴起点列表 [image1X,image2X]
   spriteXPosList: number[] = []
   // 板块碰撞隔值
   bumpThreshold = 0.5
 
-  constructor(public canvasCtx: CanvasRenderingContext2D, public sprite: Sprite) {
-    this.spriteXPosList = [sprite.X, sprite.X + this.dimensions.WIDTH]
+  constructor(public canvasCtx: CanvasRenderingContext2D) {
+    console.log('初始化地面')
+    this.spriteXPosList = [Ground.sprite.X, Ground.sprite.X + Ground.sprite.WIDTH]
     this.bumpThreshold = 0.5
     this.draw()
   }
@@ -39,28 +31,40 @@ export default class Ground {
    * 绘制地面.
    */
   draw() {
+    console.log(
+      '地面1',
+      this.spriteXPosList[0],
+      Ground.sprite.Y,
+      Ground.sprite.WIDTH,
+      Ground.sprite.HEIGHT,
+      this.xPosList[0],
+      Ground.sprite.Y,
+      Ground.sprite.WIDTH,
+      Ground.sprite.HEIGHT
+    )
+
     this.canvasCtx.drawImage(
       imageSprite.image,
       this.spriteXPosList[0],
-      this.sprite.Y,
-      this.spriteDimensions.WIDTH,
-      this.spriteDimensions.HEIGHT,
+      Ground.sprite.Y,
+      Ground.sprite.WIDTH,
+      Ground.sprite.HEIGHT,
       this.xPosList[0],
-      Ground.config.YPOS,
-      this.dimensions.WIDTH,
-      this.dimensions.HEIGHT
+      this.Y,
+      Ground.sprite.WIDTH,
+      Ground.sprite.HEIGHT
     )
 
     this.canvasCtx.drawImage(
       imageSprite.image,
       this.spriteXPosList[1],
-      this.sprite.Y,
-      this.spriteDimensions.WIDTH,
-      this.spriteDimensions.HEIGHT,
+      Ground.sprite.Y,
+      Ground.sprite.WIDTH,
+      Ground.sprite.HEIGHT,
       this.xPosList[1],
-      Ground.config.YPOS,
-      this.dimensions.WIDTH,
-      this.dimensions.HEIGHT
+      this.Y,
+      Ground.sprite.WIDTH,
+      Ground.sprite.HEIGHT
     )
   }
 
@@ -73,12 +77,14 @@ export default class Ground {
     const otherGroundIndex = groundIndex === 0 ? 1 : 0
 
     this.xPosList[groundIndex] -= increment
-    this.xPosList[otherGroundIndex] = this.xPosList[groundIndex] + this.dimensions.WIDTH
+    this.xPosList[otherGroundIndex] = this.xPosList[groundIndex] + Ground.sprite.WIDTH
 
-    if (this.xPosList[groundIndex] <= -this.dimensions.WIDTH) {
-      this.xPosList[groundIndex] += this.dimensions.WIDTH * 2
-      this.xPosList[otherGroundIndex] = this.xPosList[groundIndex] - this.dimensions.WIDTH
-      this.spriteXPosList[groundIndex] = this.getRandomType() + this.sprite.X
+    if (this.xPosList[groundIndex] <= -Ground.sprite.WIDTH) {
+      // 考虑速度过快情况
+      this.xPosList[groundIndex] += Ground.sprite.WIDTH * 2
+      // 始终保持耦合
+      this.xPosList[otherGroundIndex] = this.xPosList[groundIndex] - Ground.sprite.WIDTH
+      this.spriteXPosList[groundIndex] = this.getRandomType() + Ground.sprite.X
     }
   }
 
@@ -98,12 +104,12 @@ export default class Ground {
    */
   reset() {
     this.xPosList[0] = 0
-    this.xPosList[1] = Ground.config.WIDTH
+    this.xPosList[1] = Ground.sprite.WIDTH
   }
   /**
-   * 猜测 随机陡峭地面用
+   * 地图板块边界循环
    */
   getRandomType() {
-    return Math.random() > this.bumpThreshold ? this.dimensions.WIDTH : 0
+    return Math.random() > this.bumpThreshold ? Ground.sprite.WIDTH : 0
   }
 }

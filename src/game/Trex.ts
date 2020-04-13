@@ -4,7 +4,7 @@ import imageSprite from './ImageSprite'
 import { getTimeStamp } from '@/utils'
 
 import { Sprite } from './types'
-import Runner from './Runner'
+import Game from '.'
 
 /**
  * Trex
@@ -13,19 +13,38 @@ import Runner from './Runner'
  * @constructor
  */
 export default class Trex {
+  // 小恐龙的精灵图位置
+  static sprite: Sprite = { X: 1942, Y: 2, WIDTH: 88, HEIGHT: 90 }
+  /**
+   * 小恐龙的基本配置
+   */
+
   static config = {
     HEIGHT: 47,
     WIDTH: 44,
     HEIGHT_DUCK: 47,
     WIDTH_DUCK: 59,
-    FOOTSINK: 10,
+    FOOTSINK: 20,
     MAX_JUMP_HEIGHT: 30,
     MIN_JUMP_HEIGHT: 30,
     INIITAL_JUMP_VELOCITY: -10,
     DROP_VELOCITY: -5,
     SPEED_DROP_COEFFICIENT: 3, //下降速度系数
     GRAVITY: 0.6, //重力
-    BLINK_TIMING: 7000
+    BLINK_TIMING: 5000 //5秒眨眼睛
+  }
+  // 精灵各类行为帧序列
+  static spriteFrameSequence = {
+    WAITING: [
+      { X: 1678, Y: 2 },
+      { X: 1766, Y: 2 }
+    ],
+    RUNNING: [
+      { X: 1854, Y: 2 },
+      { X: 1942, Y: 2 }
+    ],
+    JUMPING: [],
+    DUCKING: []
   }
 
   static behavior = {
@@ -52,10 +71,11 @@ export default class Trex {
       msPerFrame: 1000 / 8
     }
   }
+  // 基础Y轴坐标
+  baseY = Game.config.CANVAS_HEIGHT - Trex.sprite.HEIGHT - Trex.config.FOOTSINK
 
-  X = 0 // 角色的X坐标
+  X = 30 // 恐龙的X坐标(不变)
   Y = 0 // 角色的Y坐标
-  baseY = 0 // 基础Y轴坐标
   minJumpHeight = 0 //最小跳跃高度
   jumpVelocity = 0 //跳跃速度
 
@@ -78,7 +98,7 @@ export default class Trex {
   currentBehaviorIndex = 0 // 猜测:当前行为的精灵图X索引
   currentMsPerFrame = 1000 / runTime.getFPS() //当前性能帧频
 
-  constructor(public canvasCtx: CanvasRenderingContext2D, public sprite: Sprite) {
+  constructor(public canvasCtx: CanvasRenderingContext2D) {
     this.init()
   }
 
@@ -87,11 +107,9 @@ export default class Trex {
    * Sets the t-rex to blink at random intervals.
    */
   init() {
-    this.baseY = Runner.CANVAS_HEIGHT - Trex.config.HEIGHT - Trex.config.FOOTSINK
     this.Y = this.baseY
     this.minJumpHeight = this.baseY - Trex.config.MIN_JUMP_HEIGHT
-
-    this.draw(0, 0)
+    // this.draw(0)
     this.update(0, 'WAITING')
   }
 
@@ -108,7 +126,7 @@ export default class Trex {
    * @通用方法 更新画布
    * @param  deltaTime
    */
-  update(deltaTime: number, status: keyof typeof Trex.behavior | '' = '') {
+  update(deltaTime: number, status: keyof typeof Trex.spriteFrameSequence | '' = '') {
     this.deltaTime += deltaTime
 
     // Update the status.
@@ -117,14 +135,16 @@ export default class Trex {
       this.currentMsPerFrame = Trex.behavior[status].msPerFrame
       this.currentBehavior = Trex.behavior[status].frames
       if (status === 'WAITING') {
+        console.log('进入等待条件')
         this.activeStartTime = getTimeStamp()
+        console.log('动作开始时间', this.activeStartTime)
         this.setBlinkDelay()
         this.blink(getTimeStamp())
       }
     }
 
     this.status === 'WAITING' ||
-      this.draw(this.currentBehavior[this.currentBehaviorIndex], 0)
+      this.draw(this.currentBehavior[this.currentBehaviorIndex])
 
     // 更新行为帧
     if (this.deltaTime >= this.currentMsPerFrame) {
@@ -146,11 +166,11 @@ export default class Trex {
    * @param x
    * @param y
    */
-  draw(x: number, y: number) {
-    const sourceX = x + this.sprite.X
-    const sourceY = y + this.sprite.Y
-    let sourceHeight = Trex.config.HEIGHT
-    let sourceWidth = Trex.config.WIDTH
+  draw(y: number) {
+    const sourceX = Trex.sprite.X
+    const sourceY = y + Trex.sprite.Y
+    let sourceHeight = Trex.sprite.HEIGHT
+    let sourceWidth = Trex.sprite.WIDTH
 
     if (!this.crashed && this.ducking) {
       //ducking
@@ -161,6 +181,18 @@ export default class Trex {
       this.ducking && this.X++
       // Standing / running
     }
+    console.log(
+      '恐龙',
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      this.X,
+      this.Y,
+      sourceWidth,
+      sourceHeight
+    )
+
     this.canvasCtx.drawImage(
       imageSprite.image,
       sourceX,
@@ -175,20 +207,20 @@ export default class Trex {
   }
 
   /**
-   * 设置校色的随机闪烁延迟
+   * 设置恐龙的眨眼延迟
    */
   setBlinkDelay() {
     this.blinkDelay = Math.ceil(Math.random() * Trex.config.BLINK_TIMING)
   }
 
   /**
-   * 使角色随机闪烁
+   * 恐龙眨眼效果
    * @param {number} time 当前时间（毫秒）
    */
   blink(time: number) {
     const deltaTime = time - this.activeStartTime
     if (deltaTime >= this.blinkDelay) {
-      this.draw(this.currentBehavior[this.currentBehaviorIndex], 0)
+      this.draw(this.currentBehavior[this.currentBehaviorIndex])
       if (this.currentBehaviorIndex === 1) {
         this.setBlinkDelay()
         this.activeStartTime = time
@@ -203,7 +235,7 @@ export default class Trex {
    */
   startJump(speed: number) {
     if (speed === undefined) {
-      speed = Runner._instance.currentSpeed
+      speed = Game.currentSpeed
     }
     if (!this.jumping) {
       this.update(0, 'JUMPING')

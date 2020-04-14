@@ -11,15 +11,15 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Ref } from 'vue-property-decorator'
+import { Component, Vue, Ref, Watch } from 'vue-property-decorator'
 import Game from './game'
 import ImageSprite from './game/ImageSprite'
 
 @Component
 export default class App extends Vue {
   @Ref() readonly gameRef!: HTMLCanvasElement
-  game?: Game // 显示倍数
-  magnification = 1
+  game?: Game
+  magnification = 1 // 显示倍数
 
   config = {
     CANVAS_WIDTH: 1200,
@@ -34,15 +34,20 @@ export default class App extends Vue {
     return this.gameRef.getContext('2d') as CanvasRenderingContext2D
   }
 
+  get status() {
+    return this.game?.status
+  }
+  onResize() {
+    this.magnification = window.innerWidth / 600
+  }
   start() {
     console.log('游戏加载')
-    window.game = new Game(this.gameCtx, this.config)
-    window.game.init()
+    this.game = new Game(this.gameCtx, this.config)
   }
   async mounted() {
     await new ImageSprite()
     this.start()
-    window.onresize = () => (this.magnification = window.innerWidth / 600)
+    window.onresize = () => this.onResize()
   }
 }
 </script>

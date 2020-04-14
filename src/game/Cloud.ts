@@ -7,8 +7,6 @@ import Game from '.'
  * 云朵
  * 没有碰撞体积的装饰物
  * @param {CanvasRenderingContext2D} canvasCtx 载入到实例的canvas2D上下文
- * @param {Sprite} sprite 实例的精灵信息
- * @param {Sprite} X 云朵的X坐标信息
  * @constructor
  */
 export default class Cloud {
@@ -27,11 +25,11 @@ export default class Cloud {
 
   // 是否移除状态
   remove = false
-  // 云间隙
+  // 当前云与下一朵云的间隙
   cloudGap = getRandomNum(Cloud.config.MIN_CLOUD_GAP, Cloud.config.MAX_CLOUD_GAP)
 
   // 基于容器坐标
-  X = Game.config.CANVAS_WIDTH - Cloud.sprite.WIDTH
+  X = Game.config.CANVAS_WIDTH
   Y = getRandomNum(Cloud.config.MAX_SKY_LEVEL, Cloud.config.MIN_SKY_LEVEL)
 
   constructor(public canvasCtx: CanvasRenderingContext2D) {
@@ -61,14 +59,10 @@ export default class Cloud {
    * 更新云朵的位置
    * @param speed
    */
-  updateXPos(speed: number) {
-    if (!this.remove) {
+  update(speed: number) {
+    if (!this.isHide) {
       this.X -= Math.ceil(speed)
       this.draw()
-      // 检测是否超出画布
-      this.isHide && (this.remove = true)
-    } else {
-      // 后续做销毁实例
     }
   }
 

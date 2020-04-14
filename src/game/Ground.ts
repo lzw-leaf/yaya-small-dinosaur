@@ -11,7 +11,7 @@ import { Sprite } from './types'
  */
 export default class Ground {
   // 地面的精灵图位置
-  static sprite: Sprite = { X: 0, Y: 110, WIDTH: 1200, HEIGHT: 24 }
+  static sprite: Sprite = { X: 0, Y: 104, WIDTH: 1200, HEIGHT: 24 }
 
   // 容器中的双图X轴起点列表 [image1X,image2X]
   xPosList = [Ground.sprite.X, Ground.sprite.WIDTH]
@@ -21,28 +21,29 @@ export default class Ground {
   // 板块碰撞隔值
   bumpThreshold = 0.5
 
+  animationWidth = 160
+
   constructor(public canvasCtx: CanvasRenderingContext2D) {
     console.log('初始化地面')
     this.spriteXPosList = [Ground.sprite.X, Ground.sprite.X + Ground.sprite.WIDTH]
     this.bumpThreshold = 0.5
-    this.draw()
+    this.init()
   }
-  /**
-   * 绘制地面.
-   */
-  draw() {
-    console.log(
-      '地面1',
+  init() {
+    this.canvasCtx.drawImage(
+      imageSprite.image,
       this.spriteXPosList[0],
       Ground.sprite.Y,
-      Ground.sprite.WIDTH,
+      160,
       Ground.sprite.HEIGHT,
       this.xPosList[0],
-      Ground.sprite.Y,
-      Ground.sprite.WIDTH,
+      this.Y,
+      160,
       Ground.sprite.HEIGHT
     )
+  }
 
+  draw() {
     this.canvasCtx.drawImage(
       imageSprite.image,
       this.spriteXPosList[0],
@@ -68,23 +69,36 @@ export default class Ground {
     )
   }
 
+  gameBoot() {
+    this.canvasCtx.drawImage(
+      imageSprite.image,
+      this.spriteXPosList[0],
+      Ground.sprite.Y,
+      this.animationWidth,
+      Ground.sprite.HEIGHT,
+      this.xPosList[0],
+      this.Y,
+      this.animationWidth,
+      Ground.sprite.HEIGHT
+    )
+    this.animationWidth += 50
+  }
   /**
    * 更新地面板块的X的位置
    * @param {number} imageNumber 地面图序号.
    * @param {number} increment
    */
   updateXPos(groundIndex: number, increment: number) {
-    const otherGroundIndex = groundIndex === 0 ? 1 : 0
+    const otherGroundIndex = groundIndex ? 0 : 1
+    this.xPosList[otherGroundIndex] -= increment
+    this.xPosList[groundIndex] = this.xPosList[otherGroundIndex] + Ground.sprite.WIDTH
 
-    this.xPosList[groundIndex] -= increment
-    this.xPosList[otherGroundIndex] = this.xPosList[groundIndex] + Ground.sprite.WIDTH
-
-    if (this.xPosList[groundIndex] <= -Ground.sprite.WIDTH) {
+    if (this.xPosList[otherGroundIndex] <= -Ground.sprite.WIDTH) {
       // 考虑速度过快情况
-      this.xPosList[groundIndex] += Ground.sprite.WIDTH * 2
+      this.xPosList[otherGroundIndex] += Ground.sprite.WIDTH * 2
       // 始终保持耦合
-      this.xPosList[otherGroundIndex] = this.xPosList[groundIndex] - Ground.sprite.WIDTH
-      this.spriteXPosList[groundIndex] = this.getRandomType() + Ground.sprite.X
+      this.xPosList[groundIndex] = this.xPosList[otherGroundIndex] - Ground.sprite.WIDTH
+      this.spriteXPosList[otherGroundIndex] = this.getRandomType() + Ground.sprite.X
     }
   }
 

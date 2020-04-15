@@ -3,8 +3,8 @@
 import imageSprite from './ImageSprite'
 // import { getTimeStamp } from '@/utils'
 
-import { Sprite, TrexStatus } from './types'
-import Game from '.'
+import { Sprite, TrexStatus } from '../types'
+import Game from '..'
 
 /**
  * Trex

@@ -13,7 +13,7 @@
 <script lang="ts">
 import { Component, Vue, Ref } from 'vue-property-decorator'
 import Game from './game'
-import ImageSprite from './game/ImageSprite'
+import ImageSprite from './game/sprite/ImageSprite'
 import { eventBus } from '@/utils/eventBus'
 
 @Component

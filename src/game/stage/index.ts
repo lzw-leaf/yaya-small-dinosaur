@@ -1,7 +1,7 @@
 // import Obstacle from './Obstacle'
-import Cloud from './Cloud'
-import Ground from './Ground'
-import Game from '.'
+import Cloud from '../sprite/Cloud'
+import Ground from '../sprite/Ground'
+import Game from '..'
 
 export default class Stage {
   /**
@@ -12,7 +12,7 @@ export default class Stage {
     BG_CLOUD_SPEED: 0.2,
     BUMPY_THRESHOLD: 0.3,
     CLOUD_FREQUENCY: 0.5, //控制云的随机出现
-    MAX_CLOUDS: 6 //云朵最    console.log('云朵列表', this.cloudList)大数量
+    MAX_CLOUDS: 6 //云朵最大数量
   }
 
   // obstacleList: Obstacle[] = []

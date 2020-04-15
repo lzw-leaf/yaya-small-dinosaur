@@ -1,6 +1,6 @@
 import runTime from '@/utils/runTime'
 import imageSprite from './ImageSprite'
-import { Sprite } from './types'
+import { Sprite } from '../types'
 
 /**
  * 地面

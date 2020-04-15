@@ -1,7 +1,7 @@
 import { getRandomNum } from '@/utils'
 import imageSprite from './ImageSprite'
-import { Sprite } from './types'
-import Game from '.'
+import { Sprite } from '../types'
+import Game from '..'
 
 /**
  * 云朵

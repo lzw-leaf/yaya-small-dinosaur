@@ -1,6 +1,6 @@
-import Stage from './Stage'
+import Stage from './stage'
 import { getTimeStamp } from '@/utils'
-import Trex from './Trex'
+import Trex from './sprite/Trex'
 import { GameStatus } from './types'
 
 import { eventBus } from '@/utils/eventBus'

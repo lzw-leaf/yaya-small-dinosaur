@@ -11,9 +11,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Ref, Watch } from 'vue-property-decorator'
+import { Component, Vue, Ref } from 'vue-property-decorator'
 import Game from './game'
 import ImageSprite from './game/ImageSprite'
+import { eventBus } from '@/utils/eventBus'
 
 @Component
 export default class App extends Vue {
@@ -47,6 +48,7 @@ export default class App extends Vue {
   async mounted() {
     await new ImageSprite()
     this.start()
+    eventBus.$on('resize', () => this.onResize())
     window.onresize = () => this.onResize()
   }
 }
@@ -58,6 +60,7 @@ export default class App extends Vue {
   width: 100vw;
   height: 100vh;
   display: flex;
+  background: #000;
   align-items: center;
   justify-content: center;
   .app__game {

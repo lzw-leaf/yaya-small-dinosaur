@@ -3,6 +3,7 @@ import { getTimeStamp } from '@/utils'
 import Trex from './Trex'
 import { GameStatus } from './types'
 
+import { eventBus } from '@/utils/eventBus'
 export default class Game {
   // 游戏基本设置
   static config = {
@@ -12,7 +13,7 @@ export default class Game {
     INIT_SPEED: 6
   }
   // 全局传递速度
-  static currentSpeed = 0
+  static currentSpeed = Game.config.INIT_SPEED
 
   stage: Stage // 游戏舞台
   tRex: Trex // 恐龙
@@ -44,19 +45,23 @@ export default class Game {
     const deltaTime = now - (this.consumeTime || now)
     this.consumeTime = now
     this.clearCanvas()
+
     if (this.status === 'WAITING') {
       this.stage.ground.init()
     }
+
     if (this.status === 'BOOTING') {
       if (this.tRex.status === 'RUNNING') {
         this.stage.ground.gameBoot()
-        this.stage.ground.animationWidth >= Game.config.CANVAS_WIDTH &&
-          (this.status = 'PLAYING')
+        if (this.stage.ground.animationWidth >= Game.config.CANVAS_WIDTH) {
+          this.status = 'PLAYING'
+          eventBus.$emit('resize') //告诉vue触发resize
+        }
       } else {
-        this.tRex.status = 'JUMPING'
         this.stage.ground.init()
       }
     }
+
     if (this.status === 'PLAYING') {
       this.stage.update(deltaTime, Game.currentSpeed)
     }
@@ -84,18 +89,27 @@ export default class Game {
   onClick() {
     console.log('点击事件')
   }
+
   onkeydown(e: KeyboardEvent) {
     if ([87, 38, 32].includes(e.keyCode)) {
-      this.status = 'BOOTING'
-      this.scheduleNextUpdate()
+      this.status === 'WAITING' && (this.status = 'BOOTING') && this.scheduleNextUpdate()
+      this.tRex.status !== 'JUMPING' && this.tRex.startJump()
     }
-
-    ;[83, 40].includes(e.keyCode) && this.startDrop()
+    if ([83, 40].includes(e.keyCode)) {
+      if (this.tRex.status === 'JUMPING') this.tRex.speedDrop = true
+      else if (['RUNNING', 'DUCKING'].includes(this.tRex.status)) this.tRex.startDuck()
+    }
   }
-  // onkeyup(e) {}
+
+  onkeyup(e: KeyboardEvent) {
+    if ([83, 40].includes(e.keyCode)) {
+      if (this.tRex.status === 'JUMPING') this.tRex.speedDrop = false
+      else if (['RUNNING', 'DUCKING'].includes(this.tRex.status)) this.tRex.endDuck()
+    }
+  }
   startListening() {
     document.onclick = () => this.onClick()
     document.onkeydown = e => this.onkeydown(e)
-    // document.onkeyup = e => this.onkeyup(e)
+    document.onkeyup = e => this.onkeyup(e)
   }
 }

@@ -1,7 +1,7 @@
 // import {CANVAS_WIDTH, CANVAS_HEIGHT, Run_BOTTOM_PAD} from './constants'
-import runTime from '@/utils/runTime'
+// import runTime from '@/utils/runTime'
 import imageSprite from './ImageSprite'
-import { getTimeStamp } from '@/utils'
+// import { getTimeStamp } from '@/utils'
 
 import { Sprite, TrexStatus } from './types'
 import Game from '.'
@@ -14,23 +14,19 @@ import Game from '.'
  */
 export default class Trex {
   // 小恐龙的精灵图位置
-  static sprite: Sprite = { X: 1942, Y: 2, WIDTH: 88, HEIGHT: 90 }
+  static sprite: Sprite = { X: 1942, Y: 2, WIDTH: 88, HEIGHT: 94 }
   /**
    * 小恐龙的基本配置
    */
-
   static config = {
-    HEIGHT: 47,
-    WIDTH: 44,
-    HEIGHT_DUCK: 47,
-    WIDTH_DUCK: 59,
-    FOOTSINK: 20,
+    HEIGHT_DUCK: 60,
+    WIDTH_DUCK: 118,
+    FOOTSINK: 20, //下限尺寸
     MAX_JUMP_HEIGHT: 60,
-    MIN_JUMP_HEIGHT: 60,
-    INIITAL_JUMP_VELOCITY: -10,
-    DROP_VELOCITY: -5,
+    MIN_JUMP_HEIGHT: 60, //弹性弹跳先不做
+    INIITAL_JUMP_VELOCITY: -20,
     SPEED_DROP_COEFFICIENT: 3, //下降速度系数
-    GRAVITY: 0.6, //重力
+    GRAVITY: 1.2, //重力
     BLINK_TIMING: 5000 //5秒眨眼睛
   }
   // 精灵各类行为帧序列
@@ -44,10 +40,17 @@ export default class Trex {
       { X: 1942, Y: 2 }
     ],
     JUMPING: [{ X: 1678, Y: 2 }],
-    DUCKING: [],
-    CRASHED: []
+    DUCKING: [
+      { X: 2206, Y: 36 },
+      { X: 2324, Y: 36 }
+    ],
+    CRASHED: [{ X: 2030, Y: 2 }]
   }
-  // 各类行为的 (毫秒/帧)
+
+  // 当前精灵行为索引
+  currentBehaviorIndex = 0
+
+  // 各类行为切换所需（毫秒/帧）
   static behaviorFrameStamp = {
     WAITING: 1000 / 3,
     DUCKING: 1000 / 8,
@@ -62,31 +65,19 @@ export default class Trex {
   X = 30 // 恐龙的X坐标(不变)
   Y = 0 // 角色的Y坐标
 
-  deltaTime = 0 //增量时间
-
-  // 状态控制
-  crashed = false
-  jumping = false
-  ducking = false
-  // waiting = true
-  running = false
+  cumulativeTime = 0 //动作时间
   status: TrexStatus = 'WAITING'
-  speedDrop = false
 
   // WAITING
   blinkDelay = 0 //眨眼频率时间
-  eyesOpenTime = 0 //睁眼开始时间
-  eyesCloseTime = 200 //闭目时间
+  isWaitBlik = false //是否等待眨眼
 
   // JUMPING
   jumpCount = 0
   jumpLimitY = this.baseY - Trex.config.MAX_JUMP_HEIGHT
   jumpVelocity = Trex.config.INIITAL_JUMP_VELOCITY - Game.currentSpeed / 10 //跳跃速度
   landing = false
-
-  currentBehavior: number[] = [] // 猜测:当前行为的精灵图坐标
-  currentBehaviorIndex = 0 // 猜测:当前行为的精灵图X索引
-  currentMsPerFrame = 1000 / runTime.getFPS() //当前性能帧频
+  speedDrop = false
 
   constructor(public canvasCtx: CanvasRenderingContext2D) {
     this.init()
@@ -94,31 +85,23 @@ export default class Trex {
 
   init() {
     this.Y = this.baseY
-    this.jumpLimitY = this.baseY - Trex.config.MIN_JUMP_HEIGHT
     this.update(0)
   }
-
-  /**
-   * Setter for the jump velocity.
-   * The approriate drop velocity is also set.
-   */
-  // setJumpVelocity(setting) {
-  //   Trex.config.INIITAL_JUMP_VELOCITY = -setting
-  //   Trex.config.DROP_VELOCITY = -setting / 2
-  // }
 
   /**
    * @通用方法 更新画布
    * @param  deltaTime
    */
   update(deltaTime: number) {
-    this.deltaTime += deltaTime
-    this.currentBehaviorIndex = 0
-    this.status === 'WAITING' && this.startWait()
-    this.status === 'JUMPING' && this.startJump(deltaTime)
-
-    this.status === 'RUNNING' && console.log('跑起来！！')
-
+    this.cumulativeTime += deltaTime
+    const statusUpdateMap = {
+      WAITING: () => this.updateWait(),
+      JUMPING: () => this.updateJump(deltaTime),
+      RUNNING: () => this.updateRunAndDuck(),
+      DUCKING: () => this.updateRunAndDuck(),
+      CRASHED: () => this.updateCrashed()
+    }
+    statusUpdateMap[this.status]()
     const { X, Y } = Trex.behavior[this.status][this.currentBehaviorIndex]
     this.draw(X, Y)
   }
@@ -127,14 +110,9 @@ export default class Trex {
     let spriteWidth = Trex.sprite.WIDTH
     let spriteHeight = Trex.sprite.HEIGHT
 
-    if (!this.crashed && this.ducking) {
-      //ducking
+    if (this.status === 'DUCKING') {
       spriteWidth = Trex.config.WIDTH_DUCK
       spriteHeight = Trex.config.HEIGHT_DUCK
-    } else {
-      // 躲避时崩溃的特殊处理
-      this.ducking && this.X++
-      // Standing / running
     }
 
     this.canvasCtx.drawImage(
@@ -151,101 +129,102 @@ export default class Trex {
   }
 
   /**
-   * 等待中的眨眼序列
+   * 等待眨眼序列
    */
-  startWait() {
-    const now = getTimeStamp()
-    //没有凝目时间就等待
-    if (!this.eyesOpenTime) {
-      this.eyesOpenTime = now
+  updateWait() {
+    // 设置眨眼
+    if (!this.isWaitBlik) {
+      this.isWaitBlik = true
+      this.cumulativeTime = 0
       this.blinkDelay = Math.ceil(Math.random() * Trex.config.BLINK_TIMING)
-    } else {
-      const stareTime = now - this.eyesOpenTime
-      // 等待0.2秒眨眼
-      if (stareTime > this.blinkDelay + this.eyesCloseTime) {
-        this.eyesOpenTime = 0
-      } else if (stareTime >= this.blinkDelay) {
-        this.currentBehaviorIndex = 1
-      }
+      return
+    }
+    if (this.cumulativeTime > this.blinkDelay + 200) {
+      // 等待0.2秒睁眼
+      this.isWaitBlik = false
+      this.currentBehaviorIndex = 0
+    } else if (this.cumulativeTime >= this.blinkDelay) {
+      this.currentBehaviorIndex = 1
     }
   }
 
   /**
-   *跳跃中的帧序列
+   * 奔跑和闪躲的序列
+   */
+  updateRunAndDuck() {
+    if (this.cumulativeTime >= this.currentFrameStamp) {
+      // 0，1转换
+      this.currentBehaviorIndex = this.currentBehaviorIndex ^ 1
+      this.cumulativeTime = 0
+    }
+  }
+
+  /**
+   *跳跃序列
    * @param deltaTime
    */
-  startJump(deltaTime: number) {
-    console.log('哈哈')
-
-    // 猜测 增量时间内所可执行的有效帧数
+  updateJump(deltaTime: number) {
+    this.currentBehaviorIndex = 0
+    // 已知 requestAnimationFrame 每秒执行60次  16.66..ms执行1次
+    // jump的FrameStamp也等于
+    // 既当每次Update之间的deltaTime的是恒定，则framesElapsed恒定1
+    // 用来控制每次方法之间增量时间不均匀时，保证速度匀速
     const framesElapsed = deltaTime / this.currentFrameStamp
-    const { MAX_JUMP_HEIGHT, SPEED_DROP_COEFFICIENT } = Trex.config
+    const { SPEED_DROP_COEFFICIENT } = Trex.config
     // 默认上升
     let increment = this.jumpVelocity * framesElapsed
-
     // 如果按下闪躲键将加快降落
-    this.speedDrop || (increment *= SPEED_DROP_COEFFICIENT)
+    this.speedDrop && (increment = Math.abs(increment * SPEED_DROP_COEFFICIENT))
     //判断降落
-    this.landing || (this.Y <= MAX_JUMP_HEIGHT && (this.landing = true))
-    this.landing && (increment = Math.abs(increment))
+    if (this.Y <= this.jumpLimitY || this.speedDrop) {
+      this.landing = true
+    }
     this.Y += Math.round(increment)
-    if (this.isReachGround) {
+    // 增加重力
+    this.jumpVelocity += Trex.config.GRAVITY * framesElapsed
+    // 落地奔跑
+    if (this.landing && this.Y >= this.baseY) {
       this.landing = false
-      this.status = 'RUNNING'
+      this.status = this.speedDrop ? 'DUCKING' : 'RUNNING'
+      this.cumulativeTime = 0
       this.Y = this.baseY
+      this.speedDrop && (this.Y += 28)
     }
   }
 
   /**
-   * 跳跃完成，开始降落
+   * 碰撞序列
    */
-  endJump() {
-    this.landing &&
-      this.jumpVelocity < Trex.config.DROP_VELOCITY &&
-      (this.jumpVelocity = Trex.config.DROP_VELOCITY)
+  updateCrashed() {
+    this.currentBehaviorIndex = 0
+  }
+
+  /**
+   * 跳跃按下指令
+   */
+  startJump() {
+    this.status = 'JUMPING'
+    this.jumpVelocity = Trex.config.INIITAL_JUMP_VELOCITY - Game.currentSpeed / 10 //跳跃速度
+    this.speedDrop = false
+  }
+
+  /**
+   * 闪避按下指令
+   */
+  startDuck() {
+    this.status = 'DUCKING'
+    this.Y = this.baseY + 28
+  }
+  /**
+   * 闪避松开指令
+   */
+  endDuck() {
+    this.status = 'RUNNING'
+    this.Y = this.baseY
   }
 
   // 当前行为帧所占毫秒
   get currentFrameStamp() {
     return Trex.behaviorFrameStamp[this.status]
-  }
-
-  // 落地状态
-  get isReachGround() {
-    return this.Y >= this.baseY
-  }
-  /**
-   * 设置落地速度
-   */
-  setSpeedDrop() {
-    this.speedDrop = true
-    this.jumpVelocity = 1
-  }
-
-  /**
-   * 设置躲避状态
-   * @param  isDucking.
-   */
-  setDuck(isDucking: boolean) {
-    if (isDucking && this.status !== 'DUCKING') {
-      this.update(0, 'DUCKING')
-      this.ducking = true
-    } else if (this.status === 'DUCKING') {
-      this.update(0, 'RUNNING')
-      this.ducking = false
-    }
-  }
-
-  /**
-   * 将角色重置到地面状态
-   */
-  reset() {
-    this.Y = this.baseY
-    this.jumpVelocity = 0
-    this.jumping = false
-    this.ducking = false
-    this.update(0, 'RUNNING')
-    this.speedDrop = false
-    this.crashed = false
   }
 }

@@ -42,8 +42,6 @@ export default class App extends Vue {
     this.magnification = window.innerWidth / 600
   }
   onUpdateBackground(matches: boolean) {
-    console.log('触发')
-
     document.documentElement.style.setProperty('--bg-color', matches ? '#000' : '#fff')
   }
   start() {

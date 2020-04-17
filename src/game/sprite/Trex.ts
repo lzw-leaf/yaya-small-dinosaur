@@ -204,7 +204,7 @@ export default class Trex {
    */
   startJump() {
     this.status = 'JUMPING'
-    this.jumpVelocity = Trex.config.INIITAL_JUMP_VELOCITY - Game.currentSpeed / 10 //跳跃速度
+    this.jumpVelocity = Trex.config.INIITAL_JUMP_VELOCITY - 7 / 10 //跳跃速度
     this.speedDrop = false
   }
 

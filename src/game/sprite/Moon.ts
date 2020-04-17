@@ -54,6 +54,7 @@ export default class Moon {
   update(deltaTime: number, speed: number) {
     this.cumulativeTime += deltaTime
     if (Stage.isNight) {
+      this.isHide && (this.X = Game.config.CANVAS_WIDTH)
       this.X -= speed
       this.draw()
     }

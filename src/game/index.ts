@@ -11,7 +11,8 @@ export default class Game {
     CANVAS_WIDTH: 1200,
     CANVAS_HEIGHT: 300,
     PLAYER_COUNT: 1,
-    INIT_SPEED: 6
+    INIT_SPEED: 6,
+    LIMIT_SPEED: 30
   }
   // 全局传递速度
   static currentSpeed = Game.config.INIT_SPEED
@@ -58,6 +59,7 @@ export default class Game {
         this.stage.ground.gameBoot()
         if (this.stage.ground.animationWidth >= Game.config.CANVAS_WIDTH) {
           this.stage.init()
+          this.distanceMeter.init()
           this.status = 'PLAYING'
           eventBus.$emit('resize') //告诉vue触发resize
         }
@@ -68,6 +70,12 @@ export default class Game {
 
     if (this.status === 'PLAYING') {
       this.stage.update(deltaTime, Game.currentSpeed)
+      this.distanceMeter.update(deltaTime)
+
+      // 加速度
+      let increaseSpeed = 2 * Math.floor(this.consumeTime / 10000)
+      increaseSpeed > 24 && (increaseSpeed = 24)
+      Game.currentSpeed = Game.config.INIT_SPEED + increaseSpeed
     }
     this.tRex.update(deltaTime)
     this.scheduleNextUpdate()

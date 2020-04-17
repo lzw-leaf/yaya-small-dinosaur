@@ -69,7 +69,7 @@ export default class Game {
     }
 
     if (this.status === 'PLAYING') {
-      this.stage.update(deltaTime, Game.currentSpeed)
+      this.stage.update(deltaTime)
       this.distanceMeter.update(deltaTime)
 
       // 加速度

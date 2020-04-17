@@ -1,6 +1,7 @@
 import runTime from '@/utils/runTime'
 import imageSprite from './ImageSprite'
 import { Sprite } from '../types'
+import Game from '..'
 
 /**
  * 地面
@@ -107,8 +108,10 @@ export default class Ground {
    * @param {number} deltaTime
    * @param {number} speed
    */
-  update(deltaTime: number, speed: number) {
-    const increment = Math.floor(speed * (runTime.getFPS() / 1000) * deltaTime)
+  update(deltaTime: number) {
+    const increment = Math.floor(
+      Game.currentSpeed * (runTime.getFPS() / 1000) * deltaTime
+    )
     this.updateXPos(Number(this.xPosList[0] <= 0), increment)
     this.draw()
   }

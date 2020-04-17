@@ -14,7 +14,7 @@ export default class Stage {
    */
   static config = {
     ALTERNATE_TIME: 30000,
-    BG_CLOUD_SPEED: 0.2,
+    BG_CLOUD_SPEED: 0.4,
     BUMPY_THRESHOLD: 0.3,
     CLOUD_FREQUENCY: 0.5, //控制云的随机出现
     MAX_STAR: 8, //星星最大数量
@@ -49,10 +49,10 @@ export default class Stage {
     }
   }
 
-  update(deltaTime: number, currentSpeed: number) {
-    this.ground.update(deltaTime, currentSpeed)
+  update(deltaTime: number) {
+    this.ground.update(deltaTime)
     this.updateMoonAndStar(deltaTime)
-    this.updateCloudList(deltaTime, currentSpeed)
+    this.updateCloudList(deltaTime)
   }
 
   updateMoonAndStar(deltaTime: number) {
@@ -78,9 +78,10 @@ export default class Stage {
     }
     this.starList = this.starList.filter(star => !star.isHide)
   }
-  updateCloudList(deltaTime: number, currentSpeed: number) {
+  updateCloudList(deltaTime: number) {
     // 执行过程产生的时间*每毫秒的云基础速度*当前速度
-    const cloudSpeed = (Stage.config.BG_CLOUD_SPEED / 1000) * deltaTime * currentSpeed
+    const cloudSpeed =
+      (Stage.config.BG_CLOUD_SPEED / 1000) * deltaTime * Game.currentSpeed
     this.cloudList.forEach(cloud => cloud.update(cloudSpeed))
 
     // 序列没有云朵就添加一个云朵

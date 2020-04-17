@@ -4,6 +4,7 @@ import Trex from './sprite/Trex'
 import { GameStatus } from './types'
 
 import { eventBus } from '@/utils/eventBus'
+import DistanceMeter from './stage/DistanceMeter'
 export default class Game {
   // 游戏基本设置
   static config = {
@@ -16,6 +17,7 @@ export default class Game {
   static currentSpeed = Game.config.INIT_SPEED
 
   stage: Stage // 游戏舞台
+  distanceMeter: DistanceMeter //仪表盘
   tRex: Trex // 恐龙
 
   // 游戏消耗时长
@@ -33,6 +35,7 @@ export default class Game {
     Game.config = { ...Game.config, ...options }
     this.stage = new Stage(this.canvasCtx)
     this.tRex = new Trex(this.canvasCtx)
+    this.distanceMeter = new DistanceMeter(this.canvasCtx)
     this.init()
   }
   init() {
@@ -54,6 +57,7 @@ export default class Game {
       if (this.tRex.status === 'RUNNING') {
         this.stage.ground.gameBoot()
         if (this.stage.ground.animationWidth >= Game.config.CANVAS_WIDTH) {
+          this.stage.init()
           this.status = 'PLAYING'
           eventBus.$emit('resize') //告诉vue触发resize
         }
@@ -83,9 +87,6 @@ export default class Game {
     speed && (Game.currentSpeed = speed)
   }
 
-  startDrop() {
-    console.log('开始下蹲')
-  }
   onClick() {
     console.log('点击事件')
   }
@@ -108,6 +109,7 @@ export default class Game {
     }
   }
   startListening() {
+    console.log('设置游戏监听')
     document.onclick = () => this.onClick()
     document.onkeydown = e => this.onkeydown(e)
     document.onkeyup = e => this.onkeyup(e)

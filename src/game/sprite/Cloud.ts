@@ -37,7 +37,7 @@ export default class Cloud {
     this.draw()
   }
   /**
-   * 绘制地面.
+   * 绘制地面
    */
   draw() {
     this.canvasCtx.save()

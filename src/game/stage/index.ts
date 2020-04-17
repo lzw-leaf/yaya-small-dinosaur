@@ -14,7 +14,7 @@ export default class Stage {
    */
   static config = {
     ALTERNATE_TIME: 30000,
-    BG_CLOUD_SPEED: 0.4,
+    BG_CLOUD_SPEED: 1,
     BUMPY_THRESHOLD: 0.3,
     CLOUD_FREQUENCY: 0.5, //控制云的随机出现
     MAX_STAR: 8, //星星最大数量

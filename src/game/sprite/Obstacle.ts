@@ -1,298 +1,130 @@
-// import runTime from '@/utils/runTime'
-// import imageSprite from './ImageSprite'
-// import {getRandomNum} from '@/utils'
-// import {Sprite} from './types'
-// import CollisionBox from './CollisionBox'
+import imageSprite from './ImageSprite'
+import { getRandomNum } from '@/utils'
+import { Sprite, ObstacleType } from '../types'
+import Game from '..'
+import runTime from '@/utils/runTime'
 
-// /**
-//  * 障碍物
-//  * @param canvasCtx
-//  * @param type
-//  * @param sprite 实例的精灵信息
-//  * @param {Object} dimensions
-//  * @param {number} gapCoefficient Mutipler in determining the gap.
-//  * @param {number} speed
-//  * @param {number} offset
-//  */
-// export default class Obstacle {
-//   // /**
-//   //  * Coefficient for calculating the maximum gap.
-//   //  * @const
-//   //  */
-//   // static MAX_GAP_COEFFICIENT = 1.5
+/**
+ * 障碍物
+ * @param canvasCtx //画布上下文
+ * @constructor
+ */
+export default class Obstacle {
+  // 障碍物的种类配置
+  static kindSpriteMap = {
+    CACTUS_SINGLE: [{ X: 650, Y: 2, WIDTH: 52, HEIGHT: 100 }],
+    CACTUS_DOUBLE: [{ X: 702, Y: 2, WIDTH: 100, HEIGHT: 100 }],
+    CACTUS_THREE: [{ X: 650, Y: 2, WIDTH: 152, HEIGHT: 100 }],
+    CACTUS_FOUR: [{ X: 802, Y: 2, WIDTH: 150, HEIGHT: 100 }],
+    PTERODACTYL: [
+      { X: 260, Y: 14, WIDTH: 92, HEIGHT: 68 },
+      { X: 352, Y: 2, WIDTH: 92, HEIGHT: 60 }
+    ]
+  }
+  /**
+   * 障碍物基本配置
+   * @enum {number}
+   */
+  static config = {
+    FOOT_SINK: 20,
+    MAX_SKY_LEVEL: 0,
+    MIN_SKY_LEVEL: 120,
+    MAX_GAP_COEFFICIENT: 1.5,
+    MIN_GAP_COEFFICIENT: 0.6,
+    CACUTS_MIN_GAD: 200,
+    PTERODACTYL_MIN_GAD: 250
+  }
+  // 仙人掌两种基于精灵转换的体积模式
+  static cactusVolumeList = [0.6, 1]
 
-//   // /**
-//   //  * Maximum obstacle grouping count.
-//   //  * @const
-//   //  */
-//   // static MAX_OBSTACLE_LENGTH = 3
-//   static kindList = {
-//     CACTUS_SMALL: {
-//       width: 17,
-//       height: 35,
-//       yPos: 105,
-//       multipleSpeed: 4,
-//       minGap: 120,
-//       minSpeed: 0,
-//       collisionBoxes: [
-//         new CollisionBox(0, 7, 5, 27),
-//         new CollisionBox(4, 0, 6, 34),
-//         new CollisionBox(10, 4, 7, 14)
-//       ]
-//     },
-//     CACTUS_LARGE: {
-//       width: 25,
-//       height: 50,
-//       yPos: 90,
-//       multipleSpeed: 7,
-//       minGap: 120,
-//       minSpeed: 0,
-//       collisionBoxes: [
-//         new CollisionBox(0, 12, 7, 38),
-//         new CollisionBox(8, 0, 7, 49),
-//         new CollisionBox(13, 10, 10, 38)
-//       ]
-//     },
-//     PTERODACTYL: {
-//       width: 46,
-//       height: 40,
-//       yPos: [100, 75, 50], // Variable height.
-//       yPosMobile: [100, 50], // Variable height mobile.
-//       multipleSpeed: 999,
-//       minSpeed: 8.5,
-//       minGap: 150,
-//       collisionBoxes: [
-//         new CollisionBox(15, 15, 16, 5),
-//         new CollisionBox(18, 21, 24, 6),
-//         new CollisionBox(2, 14, 4, 3),
-//         new CollisionBox(6, 10, 4, 7),
-//         new CollisionBox(10, 8, 6, 9)
-//       ],
-//       numFrames: 2,
-//       frameRate: 1000 / 6,
-//       speedOffset: 0.8
-//     }
-//   }
-//   static types: obstacleConfig = [
-//     {
-//       type: 'CACTUS_SMALL', //小仙人掌
-//       width: 17,
-//       height: 35,
-//       yPos: 105,
-//       multipleSpeed: 4,
-//       minGap: 120,
-//       minSpeed: 0,
-//       collisionBoxes: [
-//         new CollisionBox(0, 7, 5, 27),
-//         new CollisionBox(4, 0, 6, 34),
-//         new CollisionBox(10, 4, 7, 14)
-//       ]
-//     },
-//     {
-//       type: 'CACTUS_LARGE', //大仙人掌
-//       width: 25,
-//       height: 50,
-//       yPos: 90,
-//       multipleSpeed: 7,
-//       minGap: 120,
-//       minSpeed: 0,
-//       collisionBoxes: [
-//         new CollisionBox(0, 12, 7, 38),
-//         new CollisionBox(8, 0, 7, 49),
-//         new CollisionBox(13, 10, 10, 38)
-//       ]
-//     },
-//     {
-//       type: 'PTERODACTYL', //翼龙
-//       width: 46,
-//       height: 40,
-//       yPos: [100, 75, 50], // Variable height.
-//       yPosMobile: [100, 50], // Variable height mobile.
-//       multipleSpeed: 999,
-//       minSpeed: 8.5,
-//       minGap: 150,
-//       collisionBoxes: [
-//         new CollisionBox(15, 15, 16, 5),
-//         new CollisionBox(18, 21, 24, 6),
-//         new CollisionBox(2, 14, 4, 3),
-//         new CollisionBox(6, 10, 4, 7),
-//         new CollisionBox(10, 8, 6, 9)
-//       ],
-//       numFrames: 2,
-//       frameRate: 1000 / 6,
-//       speedOffset: 0.8
-//     }
-//   ]
+  // 当前使用的精灵数据
+  sprite: Sprite
 
-//   constructor(
-//     public canvasCtx: CanvasRenderingContext2D,
-//     public sprite: Sprite,
-//     type:,
-//     dimensions,
-//     gapCoefficient,
-//     speed,
-//     offset
-//   ) {
-//     this.canvasCtx = canvasCtx
-//     this.spritePos = spriteImgPos
-//     this.typeConfig = type
-//     this.gapCoefficient = gapCoefficient
-//     this.size = getRandomNum(1, Obstacle.MAX_OBSTACLE_LENGTH)
-//     this.dimensions = dimensions
-//     this.remove = false
-//     this.xPos = dimensions.WIDTH + (offset || 0)
-//     this.yPos = 0
-//     this.width = 0
-//     this.collisionBoxes = []
-//     this.gap = 0
-//     this.speedOffset = 0
+  // 实际画布的数据
+  dimensions = { width: 0, height: 0 }
+  X = Game.config.CANVAS_WIDTH
+  Y = 0
+  gap: number
 
-//     // For animated obstacles.
-//     this.currentFrame = 0
-//     this.timer = 0
+  isCactus = false
 
-//     this.init(speed)
-//   }
+  constructor(public canvasCtx: CanvasRenderingContext2D) {
+    const kindTypeList: ObstacleType[] = [
+      'CACTUS_SINGLE',
+      'CACTUS_DOUBLE',
+      'CACTUS_THREE',
+      'CACTUS_FOUR',
+      'PTERODACTYL'
+    ]
+    const kindType = kindTypeList[getRandomNum(0, 4)]
+    this.sprite = Obstacle.kindSpriteMap[kindType][0]
+    this.dimensions.height = this.sprite.HEIGHT
+    this.dimensions.width = this.sprite.WIDTH
+    this.isCactus = kindType.startsWith('CACTUS')
+    if (this.isCactus) {
+      const coefficient = Obstacle.cactusVolumeList[Math.round(Math.random())]
+      this.dimensions.height *= coefficient
+      this.dimensions.width *= coefficient
+      this.Y =
+        Game.config.CANVAS_HEIGHT - this.dimensions.height - Obstacle.config.FOOT_SINK
+    } else {
+      this.Y = getRandomNum(Obstacle.config.MAX_SKY_LEVEL, Obstacle.config.MIN_SKY_LEVEL)
+    }
 
-//   init(speed) {
-//     this.cloneCollisionBoxes()
+    this.gap = this.getGap()
+    this.gap > Game.config.CANVAS_WIDTH && (this.gap = Game.config.CANVAS_WIDTH)
+  }
+  /**
+   * 绘制地面
+   */
+  draw() {
+    this.canvasCtx.drawImage(
+      imageSprite.image,
+      this.sprite.X,
+      this.sprite.Y,
+      this.sprite.WIDTH,
+      this.sprite.HEIGHT,
+      this.X,
+      this.Y,
+      this.dimensions.width,
+      this.dimensions.height
+    )
+  }
 
-//     // Only allow sizing if we're at the right speed.
-//     if (this.size > 1 && this.typeConfig.multipleSpeed > speed) {
-//       this.size = 1
-//     }
-
-//     this.width = this.typeConfig.width * this.size
-
-//     // Check if obstacle can be positioned at various heights.
-//     if (Array.isArray(this.typeConfig.yPos)) {
-//       const yPosConfig = this.typeConfig.yPos
-//       this.yPos = yPosConfig[getRandomNum(0, yPosConfig.length - 1)]
-//     } else {
-//       this.yPos = this.typeConfig.yPos
-//     }
-
-//     this.draw()
-
-//     // Make collision box adjustments,
-//     // Central box is adjusted to the size as one box.
-//     //      ____        ______        ________
-//     //    _|   |-|    _|     |-|    _|       |-|
-//     //   | |<->| |   | |<--->| |   | |<----->| |
-//     //   | | 1 | |   | |  2  | |   | |   3   | |
-//     //   |_|___|_|   |_|_____|_|   |_|_______|_|
-//     //
-//     if (this.size > 1) {
-//       this.collisionBoxes[1].width =
-//         this.width - this.collisionBoxes[0].width - this.collisionBoxes[2].width
-//       this.collisionBoxes[2].x = this.width - this.collisionBoxes[2].width
-//     }
-
-//     // For obstacles that go at a different speed from the horizon.
-//     if (this.typeConfig.speedOffset) {
-//       this.speedOffset =
-//         Math.random() > 0.5 ? this.typeConfig.speedOffset : -this.typeConfig.speedOffset
-//     }
-
-//     this.gap = this.getGap(this.gapCoefficient, speed)
-//   }
-
-//   /**
-//    * Draw and crop based on size.
-//    */
-//   draw() {
-//     const sourceWidth = this.typeConfig.width
-//     const sourceHeight = this.typeConfig.height
-
-//     // X position in sprite.
-//     let sourceX = sourceWidth * this.size * (0.5 * (this.size - 1)) + this.spritePos.x
-
-//     // Animation frames.
-//     if (this.currentFrame > 0) {
-//       sourceX += sourceWidth * this.currentFrame
-//     }
-
-//     this.canvasCtx.drawImage(
-//       imageSprite.image,
-//       sourceX,
-//       this.spritePos.y,
-//       sourceWidth * this.size,
-//       sourceHeight,
-//       this.xPos,
-//       this.yPos,
-//       this.typeConfig.width * this.size,
-//       this.typeConfig.height
-//     )
-//   }
-
-//   /**
-//    * Obstacle frame update.
-//    * @param {number} deltaTime
-//    * @param {number} speed
-//    */
-//   update(deltaTime, speed) {
-//     if (!this.remove) {
-//       if (this.typeConfig.speedOffset) {
-//         speed += this.speedOffset
-//       }
-//       this.xPos -= Math.floor(((speed * runTime.getFPS()) / 1000) * deltaTime)
-
-//       // Update frame
-//       if (this.typeConfig.numFrames) {
-//         this.timer += deltaTime
-//         if (this.timer >= this.typeConfig.frameRate) {
-//           this.currentFrame =
-//             this.currentFrame === this.typeConfig.numFrames - 1
-//               ? 0
-//               : this.currentFrame + 1
-//           this.timer = 0
-//         }
-//       }
-//       this.draw()
-
-//       if (!this.isVisible()) {
-//         this.remove = true
-//       }
-//     }
-//   }
-
-//   /**
-//    * Calculate a random gap size.
-//    * - Minimum gap gets wider as speed increses
-//    * @param {number} gapCoefficient
-//    * @param {number} speed
-//    * @return {number} The gap size.
-//    */
-//   getGap(gapCoefficient, speed) {
-//     const minGap = Math.round(
-//       this.width * speed + this.typeConfig.minGap * gapCoefficient
-//     )
-//     const maxGap = Math.round(minGap * Obstacle.MAX_GAP_COEFFICIENT)
-//     return getRandomNum(minGap, maxGap)
-//   }
-
-//   /**
-//    * Check if obstacle is visible.
-//    * @return {boolean} Whether the obstacle is in the game area.
-//    */
-//   isVisible() {
-//     return this.xPos + this.width > 0
-//   }
-
-//   /**
-//    * Make a copy of the collision boxes, since these will change based on
-//    * obstacle type and size.
-//    */
-//   cloneCollisionBoxes() {
-//     const {collisionBoxes} = this.typeConfig
-
-//     for (let i = collisionBoxes.length - 1; i >= 0; i -= 1) {
-//       this.collisionBoxes[i] = new CollisionBox(
-//         collisionBoxes[i].x,
-//         collisionBoxes[i].y,
-//         collisionBoxes[i].width,
-//         collisionBoxes[i].height
-//       )
-//     }
-//   }
-// }
+  /**
+   * 更新障碍物的位置
+   * @param speed
+   */
+  update(deltaTime: number) {
+    const increment = Math.floor(
+      Game.currentSpeed * (runTime.getFPS() / 1000) * deltaTime
+    )
+    if (!this.isHide) {
+      this.X -= increment
+      this.draw()
+    }
+  }
+  /**
+   * 随机获得距离下一个障碍物的间距
+   */
+  getGap() {
+    const {
+      CACUTS_MIN_GAD,
+      PTERODACTYL_MIN_GAD,
+      MIN_GAP_COEFFICIENT,
+      MAX_GAP_COEFFICIENT
+    } = Obstacle.config
+    const initMinGap = this.isCactus ? CACUTS_MIN_GAD : PTERODACTYL_MIN_GAD
+    const minGap = Math.round(
+      this.dimensions.width * 0.5 * Game.currentSpeed + initMinGap * MIN_GAP_COEFFICIENT
+    )
+    const maxGap = Math.round(minGap * MAX_GAP_COEFFICIENT)
+    return getRandomNum(minGap, maxGap)
+  }
+  /**
+   * 检测是否超出画布
+   */
+  get isHide() {
+    return this.X < -this.dimensions.width
+  }
+}

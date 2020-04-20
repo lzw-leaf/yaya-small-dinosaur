@@ -6,6 +6,8 @@ import Moon from '../sprite/Moon'
 import Star from '../sprite/star'
 import { eventBus } from '@/utils/eventBus'
 import { getRandomNum } from '@/utils'
+import Obstacle from '../sprite/Obstacle'
+import DistanceMeter from './DistanceMeter'
 
 export default class Stage {
   /**
@@ -31,6 +33,7 @@ export default class Stage {
 
   cloudList: Cloud[] = []
   ground: Ground
+  obstacleList: Obstacle[] = []
 
   /**
    * 初始化游戏舞台
@@ -53,6 +56,7 @@ export default class Stage {
     this.ground.update(deltaTime)
     this.updateMoonAndStar(deltaTime)
     this.updateCloudList(deltaTime)
+    DistanceMeter.currentMaxScore > 30 && this.updateObstacleList(deltaTime)
   }
 
   updateMoonAndStar(deltaTime: number) {
@@ -77,6 +81,21 @@ export default class Stage {
       this.starList.push(new Star(this.canvasCtx))
     }
     this.starList = this.starList.filter(star => !star.isHide)
+  }
+
+  updateObstacleList(deltaTime: number) {
+    this.obstacleList.forEach(obstacle => obstacle.update(deltaTime))
+    this.obstacleList.length || this.obstacleList.push(new Obstacle(this.canvasCtx))
+    const obstacleCount = this.obstacleList.length
+
+    // 随机生成障碍物
+    const lastObstacle = this.obstacleList[obstacleCount - 1]
+    const { CANVAS_WIDTH } = Game.config
+
+    if (CANVAS_WIDTH - lastObstacle.X > lastObstacle.gap && Math.random() > 0.9) {
+      this.obstacleList.push(new Obstacle(this.canvasCtx))
+    }
+    this.obstacleList.filter(obstacle => !obstacle.isHide)
   }
   updateCloudList(deltaTime: number) {
     // 执行过程产生的时间*每毫秒的云基础速度*当前速度

@@ -27,7 +27,7 @@ export default class DistanceMeter {
   }
 
   maxScoreUnits = 5
-  currentMaxScore = 0
+  static currentMaxScore = 0
 
   highScore: number //历史最高分
 
@@ -82,12 +82,12 @@ export default class DistanceMeter {
   update(deltaTime: number) {
     const increment = this.getActualDistance(deltaTime)
     // 用于控制闪烁
-    const oldScore = this.currentMaxScore
-    this.currentMaxScore += increment
+    const oldScore = DistanceMeter.currentMaxScore
+    DistanceMeter.currentMaxScore += increment
 
     let isDraw = true
-    let showScore = this.currentMaxScore
-    Math.floor(oldScore / 100) < Math.floor(this.currentMaxScore / 100) &&
+    let showScore = DistanceMeter.currentMaxScore
+    Math.floor(oldScore / 100) < Math.floor(DistanceMeter.currentMaxScore / 100) &&
       (this.isFlash = true)
     if (this.isFlash) {
       isDraw = false
@@ -104,7 +104,7 @@ export default class DistanceMeter {
         this.alearyChangeTime = 0
       } else if (this.alearyChangeTime > FLAGH_FREQUENCY) {
         isDraw = true
-        showScore = Math.floor(this.currentMaxScore / 100) * 100
+        showScore = Math.floor(DistanceMeter.currentMaxScore / 100) * 100
       }
     }
     const scoreUnitValueList = String(showScore).split('')

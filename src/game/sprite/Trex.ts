@@ -5,6 +5,7 @@ import imageSprite from './ImageSprite'
 
 import { Sprite, TrexStatus } from '../types'
 import Game from '..'
+import CollisionBox from '../role/CollisionBox'
 
 /**
  * Trex
@@ -15,6 +16,7 @@ import Game from '..'
 export default class Trex {
   // 小恐龙的精灵图位置
   static sprite: Sprite = { X: 1942, Y: 2, WIDTH: 88, HEIGHT: 94 }
+
   /**
    * 小恐龙的基本配置
    */
@@ -45,6 +47,14 @@ export default class Trex {
       { X: 2324, Y: 36 }
     ],
     CRASHED: [{ X: 2030, Y: 2 }]
+  }
+
+  behaviorCollsionBoxMap = {
+    WAITING: [new CollisionBox(this, 90, 96)],
+    RUNNING: [new CollisionBox(this, 90, 96)],
+    JUMPING: [new CollisionBox(this, 90, 96)],
+    DUCKING: [new CollisionBox(this, 118, 60)],
+    CRASHED: []
   }
 
   // 当前精灵行为索引
@@ -104,6 +114,7 @@ export default class Trex {
     statusUpdateMap[this.status]()
     const { X, Y } = Trex.behavior[this.status][this.currentBehaviorIndex]
     this.draw(X, Y)
+    this.behaviorCollsionBoxMap[this.status].forEach(item => item.draw())
   }
 
   draw(spriteX: number, spriteY: number) {

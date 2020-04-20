@@ -11,11 +11,12 @@ export default class Game {
     CANVAS_WIDTH: 1200,
     CANVAS_HEIGHT: 300,
     PLAYER_COUNT: 1,
-    INIT_SPEED: 6,
+    INIT_SPEED: 7,
     LIMIT_SPEED: 30
   }
   // 全局传递速度
   static currentSpeed = Game.config.INIT_SPEED
+  static CANVASCTX: CanvasRenderingContext2D
 
   stage: Stage // 游戏舞台
   distanceMeter: DistanceMeter //仪表盘
@@ -33,6 +34,9 @@ export default class Game {
     public canvasCtx: CanvasRenderingContext2D,
     options: Partial<typeof Game.config>
   ) {
+    Game.CANVASCTX = this.canvasCtx
+    console.log(Game.CANVASCTX)
+
     Game.config = { ...Game.config, ...options }
     this.stage = new Stage(this.canvasCtx)
     this.tRex = new Trex(this.canvasCtx)
@@ -73,7 +77,7 @@ export default class Game {
       this.distanceMeter.update(deltaTime)
 
       // 加速度
-      let increaseSpeed = 2 * Math.floor(this.consumeTime / 10000)
+      let increaseSpeed = 2 * (this.consumeTime / 10000)
       increaseSpeed > 24 && (increaseSpeed = 24)
       Game.currentSpeed = Game.config.INIT_SPEED + increaseSpeed
     }

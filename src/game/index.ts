@@ -5,6 +5,7 @@ import { GameStatus } from './types'
 
 import { eventBus } from '@/utils/eventBus'
 import DistanceMeter from './stage/DistanceMeter'
+import Rule from './role/Rule'
 export default class Game {
   // 游戏基本设置
   static config = {
@@ -22,6 +23,8 @@ export default class Game {
   distanceMeter: DistanceMeter //仪表盘
   tRex: Trex // 恐龙
 
+  rule: Rule //规则
+
   // 游戏消耗时长
   consumeTime = 0
   // 游戏状态
@@ -36,11 +39,11 @@ export default class Game {
   ) {
     Game.CANVASCTX = this.canvasCtx
     console.log(Game.CANVASCTX)
-
     Game.config = { ...Game.config, ...options }
     this.stage = new Stage(this.canvasCtx)
     this.tRex = new Trex(this.canvasCtx)
     this.distanceMeter = new DistanceMeter(this.canvasCtx)
+    this.rule = new Rule()
     this.init()
   }
   init() {
@@ -82,7 +85,14 @@ export default class Game {
       Game.currentSpeed = Game.config.INIT_SPEED + increaseSpeed
     }
     this.tRex.update(deltaTime)
-    this.scheduleNextUpdate()
+    const readObstacle = this.stage.obstacleList.find(
+      item => item.X + item.dimensions.width > this.tRex.X
+    )
+    readObstacle &&
+      this.rule.detectCollision(this.tRex.collisionBox, readObstacle.collisionBox)
+    if (this.status !== 'CRASHED') {
+      this.scheduleNextUpdate()
+    }
   }
 
   // 安排下一次更新
@@ -99,6 +109,12 @@ export default class Game {
     speed && (Game.currentSpeed = speed)
   }
 
+  onCrashed() {
+    cancelAnimationFrame(this.reqFrameId)
+    this.status = 'CRASHED'
+    this.tRex.status = 'CRASHED'
+    console.log('游戏结束')
+  }
   onClick() {
     console.log('点击事件')
   }
@@ -125,5 +141,6 @@ export default class Game {
     document.onclick = () => this.onClick()
     document.onkeydown = e => this.onkeydown(e)
     document.onkeyup = e => this.onkeyup(e)
+    eventBus.$on('crashed', () => this.onCrashed())
   }
 }

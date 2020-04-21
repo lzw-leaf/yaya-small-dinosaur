@@ -3,6 +3,7 @@ import { getRandomNum } from '@/utils'
 import { Sprite, ObstacleType } from '../types'
 import Game from '..'
 import runTime from '@/utils/runTime'
+import CollisionBox from '../role/CollisionBox'
 
 /**
  * 障碍物
@@ -46,7 +47,10 @@ export default class Obstacle {
   Y = 0
   gap: number
 
+  // 是否仙人掌（用于区分翼龙）
   isCactus = false
+
+  collisionBox: CollisionBox
 
   constructor(public canvasCtx: CanvasRenderingContext2D) {
     const kindTypeList: ObstacleType[] = [
@@ -73,6 +77,12 @@ export default class Obstacle {
 
     this.gap = this.getGap()
     this.gap > Game.config.CANVAS_WIDTH && (this.gap = Game.config.CANVAS_WIDTH)
+    this.collisionBox = new CollisionBox(
+      this.X,
+      this.Y,
+      this.dimensions.width,
+      this.dimensions.height
+    )
   }
   /**
    * 绘制地面
@@ -102,6 +112,8 @@ export default class Obstacle {
     if (!this.isHide) {
       this.X -= increment
       this.draw()
+      this.collisionBox.setPosition(this.X, this.Y)
+      this.collisionBox.draw()
     }
   }
   /**

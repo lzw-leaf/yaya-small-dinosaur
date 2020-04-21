@@ -49,17 +49,6 @@ export default class Trex {
     CRASHED: [{ X: 2030, Y: 2 }]
   }
 
-  behaviorCollsionBoxMap = {
-    WAITING: [new CollisionBox(this, 90, 96)],
-    RUNNING: [new CollisionBox(this, 90, 96)],
-    JUMPING: [new CollisionBox(this, 90, 96)],
-    DUCKING: [new CollisionBox(this, 118, 60)],
-    CRASHED: []
-  }
-
-  // 当前精灵行为索引
-  currentBehaviorIndex = 0
-
   // 各类行为切换所需（毫秒/帧）
   static behaviorFrameStamp = {
     WAITING: 1000 / 3,
@@ -69,11 +58,24 @@ export default class Trex {
     CRASHED: 1000 / 60
   }
 
+  // 当前精灵行为索引
+  currentBehaviorIndex = 0
+
+  collisionBox: CollisionBox
+
   // 基础Y轴坐标
   baseY = Game.config.CANVAS_HEIGHT - Trex.sprite.HEIGHT - Trex.config.FOOTSINK
 
   X = 30 // 恐龙的X坐标(不变)
   Y = 0 // 角色的Y坐标
+
+  behaviorCollsionBoxMap = {
+    WAITING: new CollisionBox(this.X, this.Y, 90, 96),
+    RUNNING: new CollisionBox(this.X, this.Y, 90, 96),
+    JUMPING: new CollisionBox(this.X, this.Y, 90, 96),
+    DUCKING: new CollisionBox(this.X, this.Y, 118, 60),
+    CRASHED: new CollisionBox(this.X, this.Y, 90, 96)
+  }
 
   cumulativeTime = 0 //动作时间
   status: TrexStatus = 'WAITING'
@@ -91,6 +93,7 @@ export default class Trex {
 
   constructor(public canvasCtx: CanvasRenderingContext2D) {
     this.init()
+    this.collisionBox = this.behaviorCollsionBoxMap.WAITING
   }
 
   init() {
@@ -114,7 +117,11 @@ export default class Trex {
     statusUpdateMap[this.status]()
     const { X, Y } = Trex.behavior[this.status][this.currentBehaviorIndex]
     this.draw(X, Y)
-    this.behaviorCollsionBoxMap[this.status].forEach(item => item.draw())
+
+    // 设置碰撞盒子
+    this.collisionBox = this.behaviorCollsionBoxMap[this.status]
+    this.collisionBox.setPosition(this.X, this.Y)
+    this.collisionBox.draw()
   }
 
   draw(spriteX: number, spriteY: number) {

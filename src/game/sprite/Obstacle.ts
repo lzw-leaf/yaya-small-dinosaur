@@ -50,7 +50,7 @@ export default class Obstacle {
   // 是否仙人掌（用于区分翼龙）
   isCactus = false
 
-  collisionBox: CollisionBox
+  collisionBoxs: CollisionBox[]
 
   constructor(public canvasCtx: CanvasRenderingContext2D) {
     const kindTypeList: ObstacleType[] = [
@@ -77,12 +77,9 @@ export default class Obstacle {
 
     this.gap = this.getGap()
     this.gap > Game.config.CANVAS_WIDTH && (this.gap = Game.config.CANVAS_WIDTH)
-    this.collisionBox = new CollisionBox(
-      this.X,
-      this.Y,
-      this.dimensions.width,
-      this.dimensions.height
-    )
+    this.collisionBoxs = [
+      new CollisionBox(this.X, this.Y, this.dimensions.width, this.dimensions.height)
+    ]
   }
   /**
    * 绘制地面
@@ -106,14 +103,18 @@ export default class Obstacle {
    * @param speed
    */
   update(deltaTime: number) {
+    const oldX = this.X
+    const oldY = this.Y
     const increment = Math.floor(
       Game.currentSpeed * (runTime.getFPS() / 1000) * deltaTime
     )
     if (!this.isHide) {
       this.X -= increment
       this.draw()
-      this.collisionBox.setPosition(this.X, this.Y)
-      this.collisionBox.draw()
+      this.collisionBoxs.forEach(box => {
+        box.setPosition(box.X + this.X - oldX, box.Y + this.Y - oldY)
+        box.draw()
+      })
     }
   }
   /**

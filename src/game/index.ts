@@ -85,11 +85,11 @@ export default class Game {
       Game.currentSpeed = Game.config.INIT_SPEED + increaseSpeed
     }
     this.tRex.update(deltaTime)
-    const readObstacle = this.stage.obstacleList.find(
+    const readyObstacle = this.stage.obstacleList.find(
       item => item.X + item.dimensions.width > this.tRex.X
     )
-    readObstacle &&
-      this.rule.detectCollision(this.tRex.collisionBox, readObstacle.collisionBox)
+    readyObstacle &&
+      this.rule.detectCollisionList(this.tRex.collisionBoxs, readyObstacle.collisionBoxs)
     if (this.status !== 'CRASHED') {
       this.scheduleNextUpdate()
     }
@@ -116,7 +116,7 @@ export default class Game {
     console.log('游戏结束')
   }
   onClick() {
-    console.log('点击事件')
+    Game.config.PLAYER_COUNT = 2
   }
 
   onkeydown(e: KeyboardEvent) {

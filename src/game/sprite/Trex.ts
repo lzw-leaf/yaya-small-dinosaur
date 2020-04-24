@@ -61,20 +61,40 @@ export default class Trex {
   // 当前精灵行为索引
   currentBehaviorIndex = 0
 
-  collisionBox: CollisionBox
+  collisionBoxs: CollisionBox[]
 
   // 基础Y轴坐标
   baseY = Game.config.CANVAS_HEIGHT - Trex.sprite.HEIGHT - Trex.config.FOOTSINK
 
   X = 30 // 恐龙的X坐标(不变)
-  Y = 0 // 角色的Y坐标
+  Y = this.baseY // 角色的Y坐标
 
   behaviorCollsionBoxMap = {
-    WAITING: new CollisionBox(this.X, this.Y, 90, 96),
-    RUNNING: new CollisionBox(this.X, this.Y, 90, 96),
-    JUMPING: new CollisionBox(this.X, this.Y, 90, 96),
-    DUCKING: new CollisionBox(this.X, this.Y, 118, 60),
-    CRASHED: new CollisionBox(this.X, this.Y, 90, 96)
+    WAITING: [
+      new CollisionBox(32, 218, 20, 40),
+      new CollisionBox(50, 220, 34, 60),
+      new CollisionBox(84, 220, 20, 40),
+      new CollisionBox(72, 188, 44, 40)
+    ],
+    RUNNING: [
+      new CollisionBox(32, 218, 20, 40),
+      new CollisionBox(50, 220, 34, 60),
+      new CollisionBox(84, 220, 20, 40),
+      new CollisionBox(72, 188, 44, 40)
+    ],
+    JUMPING: [
+      new CollisionBox(32, 218, 20, 40),
+      new CollisionBox(50, 220, 34, 60),
+      new CollisionBox(84, 220, 20, 40),
+      new CollisionBox(72, 188, 44, 40)
+    ],
+    DUCKING: [new CollisionBox(this.X, this.Y, 118, 60)],
+    CRASHED: [
+      new CollisionBox(32, 218, 20, 40),
+      new CollisionBox(50, 220, 34, 60),
+      new CollisionBox(84, 220, 20, 40),
+      new CollisionBox(72, 188, 44, 40)
+    ]
   }
 
   cumulativeTime = 0 //动作时间
@@ -93,7 +113,7 @@ export default class Trex {
 
   constructor(public canvasCtx: CanvasRenderingContext2D) {
     this.init()
-    this.collisionBox = this.behaviorCollsionBoxMap.WAITING
+    this.collisionBoxs = this.behaviorCollsionBoxMap.WAITING
   }
 
   init() {
@@ -106,6 +126,8 @@ export default class Trex {
    * @param  deltaTime
    */
   update(deltaTime: number) {
+    const oldX = this.X
+    const oldY = this.Y
     this.cumulativeTime += deltaTime
     const statusUpdateMap = {
       WAITING: () => this.updateWait(),
@@ -119,9 +141,15 @@ export default class Trex {
     this.draw(X, Y)
 
     // 设置碰撞盒子
-    this.collisionBox = this.behaviorCollsionBoxMap[this.status]
-    this.collisionBox.setPosition(this.X, this.Y)
-    this.collisionBox.draw()
+    this.collisionBoxs = this.behaviorCollsionBoxMap[this.status]
+
+    this.collisionBoxs.forEach((box, index) => {
+      !index &&
+        this.status === 'JUMPING' &&
+        console.log(this.Y, oldY, box.Y, this.Y - oldY)
+      box.setPosition(box.X + (this.X - oldX), box.Y + (this.Y - oldY))
+      box.draw()
+    })
   }
 
   draw(spriteX: number, spriteY: number) {

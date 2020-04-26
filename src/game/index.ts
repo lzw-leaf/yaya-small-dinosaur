@@ -32,13 +32,16 @@ export default class Game {
 
   // 动画请求Id
   reqFrameId = 0
+  waitStartTimeout = 0
 
   constructor(
     public canvasCtx: CanvasRenderingContext2D,
     options: Partial<typeof Game.config>
   ) {
+    // 临时
     Game.CANVASCTX = this.canvasCtx
     console.log(Game.CANVASCTX)
+
     Game.config = { ...Game.config, ...options }
     this.stage = new Stage(this.canvasCtx)
     this.tRex = new Trex(this.canvasCtx)
@@ -48,19 +51,16 @@ export default class Game {
   }
   init() {
     this.setSpeed(Game.config.INIT_SPEED)
+    eventBus.$emit('resize') //告诉vue触发resize
     this.startListening()
-    this.scheduleNextUpdate()
+    this.stage.ground.init()
+    this.tRex.startWait()
   }
   update() {
     const now = getTimeStamp()
     const deltaTime = now - (this.consumeTime || now)
     this.consumeTime = now
     this.clearCanvas()
-
-    if (this.status === 'WAITING') {
-      this.stage.ground.init()
-    }
-
     if (this.status === 'BOOTING') {
       if (this.tRex.status === 'RUNNING') {
         this.stage.ground.gameBoot()
@@ -88,11 +88,12 @@ export default class Game {
     const readyObstacle = this.stage.obstacleList.find(
       item => item.X + item.dimensions.width > this.tRex.X
     )
+    // 碰撞判断
     readyObstacle &&
       this.rule.detectCollisionList(this.tRex.collisionBoxs, readyObstacle.collisionBoxs)
-    if (this.status !== 'CRASHED') {
-      this.scheduleNextUpdate()
-    }
+
+    // over判断
+    this.status !== 'CRASHED' && this.scheduleNextUpdate()
   }
 
   // 安排下一次更新
@@ -121,7 +122,12 @@ export default class Game {
 
   onkeydown(e: KeyboardEvent) {
     if ([87, 38, 32].includes(e.keyCode)) {
-      this.status === 'WAITING' && (this.status = 'BOOTING') && this.scheduleNextUpdate()
+      if (this.status === 'WAITING') {
+        this.status = 'BOOTING'
+        clearTimeout(this.waitStartTimeout)
+        this.scheduleNextUpdate()
+      }
+
       this.tRex.status !== 'JUMPING' && this.tRex.startJump()
     }
     if ([83, 40].includes(e.keyCode)) {

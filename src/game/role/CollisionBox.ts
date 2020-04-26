@@ -15,7 +15,7 @@ export default class CollisionBox {
     public WIDTH: number,
     public HEIGHT: number
   ) {
-    this.draw()
+    // this.draw()
   }
   draw() {
     Game.CANVASCTX.lineWidth = 3

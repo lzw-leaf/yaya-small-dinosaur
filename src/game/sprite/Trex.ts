@@ -1,11 +1,9 @@
-// import {CANVAS_WIDTH, CANVAS_HEIGHT, Run_BOTTOM_PAD} from './constants'
-// import runTime from '@/utils/runTime'
 import imageSprite from './ImageSprite'
-// import { getTimeStamp } from '@/utils'
-
 import { Sprite, TrexStatus } from '../types'
 import Game from '..'
 import CollisionBox from '../role/CollisionBox'
+
+import cloneDeep from 'lodash/cloneDeep'
 
 /**
  * Trex
@@ -15,6 +13,7 @@ import CollisionBox from '../role/CollisionBox'
  */
 export default class Trex {
   // 小恐龙的精灵图位置
+  // static sprite: Sprite = { X: 802, Y: 2, WIDTH: 150, HEIGHT: 100 }
   static sprite: Sprite = { X: 1942, Y: 2, WIDTH: 88, HEIGHT: 94 }
 
   /**
@@ -29,10 +28,14 @@ export default class Trex {
     INIITAL_JUMP_VELOCITY: -20,
     SPEED_DROP_COEFFICIENT: 3, //下降速度系数
     GRAVITY: 1.2, //重力
-    BLINK_TIMING: 5000 //5秒眨眼睛
+    BLINK_TIMING: 7000 //7秒延时眼睛
   }
   // 精灵各类行为帧序列
   static behavior = {
+    // WAITING: [
+    //   { X: 802, Y: 2 },
+    //   { X: 802, Y: 2 }
+    // ],
     WAITING: [
       { X: 1678, Y: 2 },
       { X: 1766, Y: 2 }
@@ -69,7 +72,16 @@ export default class Trex {
   X = 30 // 恐龙的X坐标(不变)
   Y = this.baseY // 角色的Y坐标
 
-  behaviorCollsionBoxMap = {
+  readonly behaviorCollsionBoxMap = {
+    // WAITING: [
+    //   new CollisionBox(32, 206, 14, 38),
+    //   new CollisionBox(48, 182, 15, 94),
+    //   new CollisionBox(66, 200, 30, 46),
+    //   new CollisionBox(98, 182, 15, 94),
+    //   new CollisionBox(120, 192, 26, 50),
+    //   new CollisionBox(148, 182, 16, 94),
+    //   new CollisionBox(168, 202, 14, 46)
+    // ],
     WAITING: [
       new CollisionBox(32, 218, 20, 40),
       new CollisionBox(50, 220, 34, 60),
@@ -101,6 +113,7 @@ export default class Trex {
   status: TrexStatus = 'WAITING'
 
   // WAITING
+  blinkTimeout = 0 //眨眼计时器
   blinkDelay = 0 //眨眼频率时间
   isWaitBlik = false //是否等待眨眼
 
@@ -112,13 +125,10 @@ export default class Trex {
   speedDrop = false
 
   constructor(public canvasCtx: CanvasRenderingContext2D) {
-    this.init()
-    this.collisionBoxs = this.behaviorCollsionBoxMap.WAITING
-  }
-
-  init() {
     this.Y = this.baseY
-    this.update(0)
+    this.collisionBoxs = cloneDeep(this.behaviorCollsionBoxMap.WAITING)
+    this.draw()
+    // this.drawCollisionBox()
   }
 
   /**
@@ -128,31 +138,34 @@ export default class Trex {
   update(deltaTime: number) {
     const oldX = this.X
     const oldY = this.Y
+    const oldStatus = this.status
     this.cumulativeTime += deltaTime
     const statusUpdateMap = {
-      WAITING: () => this.updateWait(),
+      WAITING: () => this.startWait(),
       JUMPING: () => this.updateJump(deltaTime),
       RUNNING: () => this.updateRunAndDuck(),
       DUCKING: () => this.updateRunAndDuck(),
       CRASHED: () => this.updateCrashed()
     }
     statusUpdateMap[this.status]()
-    const { X, Y } = Trex.behavior[this.status][this.currentBehaviorIndex]
-    this.draw(X, Y)
+    this.draw()
 
     // 设置碰撞盒子
-    this.collisionBoxs = this.behaviorCollsionBoxMap[this.status]
+    let differenceX = this.X - oldX
+    let differenceY = this.Y - oldY
+    if (oldStatus !== this.status) {
+      differenceX = differenceY = 0
+      this.collisionBoxs = cloneDeep(this.behaviorCollsionBoxMap[this.status])
+    }
 
-    this.collisionBoxs.forEach((box, index) => {
-      !index &&
-        this.status === 'JUMPING' &&
-        console.log(this.Y, oldY, box.Y, this.Y - oldY)
-      box.setPosition(box.X + (this.X - oldX), box.Y + (this.Y - oldY))
+    this.collisionBoxs.forEach(box => {
+      box.setPosition(box.X + differenceX, box.Y + differenceY)
       box.draw()
     })
   }
 
-  draw(spriteX: number, spriteY: number) {
+  draw() {
+    const { X, Y } = Trex.behavior[this.status][this.currentBehaviorIndex]
     let spriteWidth = Trex.sprite.WIDTH
     let spriteHeight = Trex.sprite.HEIGHT
 
@@ -163,8 +176,8 @@ export default class Trex {
 
     this.canvasCtx.drawImage(
       imageSprite.image,
-      spriteX,
-      spriteY,
+      X,
+      Y,
       spriteWidth,
       spriteHeight,
       this.X,
@@ -174,24 +187,28 @@ export default class Trex {
     )
   }
 
+  drawCollisionBox() {
+    // this.collisionBoxs.forEach(item => item.draw())
+  }
+
   /**
    * 等待眨眼序列
    */
-  updateWait() {
+  startWait() {
     // 设置眨眼
-    if (!this.isWaitBlik) {
-      this.isWaitBlik = true
-      this.cumulativeTime = 0
-      this.blinkDelay = Math.ceil(Math.random() * Trex.config.BLINK_TIMING)
-      return
-    }
-    if (this.cumulativeTime > this.blinkDelay + 200) {
-      // 等待0.2秒睁眼
-      this.isWaitBlik = false
-      this.currentBehaviorIndex = 0
-    } else if (this.cumulativeTime >= this.blinkDelay) {
+    this.isWaitBlik = true
+    this.blinkDelay = Math.ceil(Math.random() * Trex.config.BLINK_TIMING)
+    this.blinkTimeout = setTimeout(() => {
       this.currentBehaviorIndex = 1
-    }
+      this.draw()
+      setTimeout(() => {
+        this.isWaitBlik = false
+        this.currentBehaviorIndex = 0
+        this.draw()
+        // this.drawCollisionBox()
+        this.startWait()
+      }, 200)
+    }, this.blinkDelay)
   }
 
   /**

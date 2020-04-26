@@ -40,6 +40,7 @@ export default class Obstacle {
 
   // 当前使用的精灵数据
   sprite: Sprite
+  currentSpriteIndex = 0
 
   // 实际画布的数据
   dimensions = { width: 0, height: 0 }
@@ -49,7 +50,56 @@ export default class Obstacle {
 
   // 是否仙人掌（用于区分翼龙）
   isCactus = false
+  // 积累时间
+  cumulativeTime = 0
 
+  temp = [
+    new CollisionBox(32, 206, 14, 38),
+    new CollisionBox(48, 182, 15, 94),
+    new CollisionBox(66, 200, 30, 46),
+    new CollisionBox(98, 182, 15, 94),
+    new CollisionBox(120, 192, 26, 50),
+    new CollisionBox(148, 182, 16, 94),
+    new CollisionBox(168, 202, 14, 46)
+  ]
+
+  readonly kindCollisionBoxMap = {
+    CACTUS_SINGLE: [
+      { XScale: 1, YScale: 206 - 182, width: 14, height: 38 },
+      { XScale: 48 - 32, YScale: 1, width: 18, height: 94 },
+      { XScale: 68 - 32, YScale: 202 - 182, width: 14, height: 40 }
+    ],
+    CACTUS_DOUBLE: [
+      { XScale: 1, YScale: 206 - 182, width: 14, height: 38 },
+      { XScale: 48 - 30, YScale: 1, width: 15, height: 94 },
+      { XScale: 66 - 30, YScale: 192 - 182, width: 30, height: 50 },
+      { XScale: 98 - 30, YScale: 1, width: 15, height: 94 },
+      { XScale: 116 - 30, YScale: 202 - 182, width: 14, height: 41 }
+    ],
+    CACTUS_THREE: [
+      { XScale: 1, YScale: 206 - 182, width: 14, height: 38 },
+      { XScale: 48 - 32, YScale: 1, width: 15, height: 94 },
+      { XScale: 66 - 32, YScale: 200 - 182, width: 30, height: 46 },
+      { XScale: 98 - 32, YScale: 1, width: 15, height: 94 },
+      { XScale: 120 - 32, YScale: 192 - 182, width: 26, height: 50 },
+      { XScale: 148 - 32, YScale: 1, width: 16, height: 94 },
+      { XScale: 168 - 32, YScale: 202 - 182, width: 14, height: 46 }
+    ],
+    CACTUS_FOUR: [
+      { XScale: 1, YScale: 206 - 182, width: 14, height: 38 },
+      { XScale: 48 - 32, YScale: 1, width: 15, height: 94 },
+      { XScale: 66 - 32, YScale: 200 - 182, width: 30, height: 46 },
+      { XScale: 98 - 32, YScale: 1, width: 15, height: 94 },
+      { XScale: 120 - 32, YScale: 192 - 182, width: 26, height: 50 },
+      { XScale: 148 - 32, YScale: 1, width: 16, height: 94 },
+      { XScale: 168 - 32, YScale: 202 - 182, width: 14, height: 46 }
+    ],
+    PTERODACTYL: [
+      { XScale: 1, YScale: 206 - 182, width: 14, height: 38 },
+      { XScale: 48 - 32, YScale: 1, width: 18, height: 94 },
+      { XScale: 68 - 32, YScale: 202 - 182, width: 14, height: 40 }
+    ]
+  }
   collisionBoxs: CollisionBox[]
 
   constructor(public canvasCtx: CanvasRenderingContext2D) {
@@ -60,13 +110,22 @@ export default class Obstacle {
       'CACTUS_FOUR',
       'PTERODACTYL'
     ]
-    const kindType = kindTypeList[getRandomNum(0, 4)]
+    const kindType = kindTypeList[getRandomNum(3, 4)]
     this.sprite = Obstacle.kindSpriteMap[kindType][0]
     this.dimensions.height = this.sprite.HEIGHT
     this.dimensions.width = this.sprite.WIDTH
     this.isCactus = kindType.startsWith('CACTUS')
+    console.log('kind', kindType)
+
+    // 体积控制
+    let coefficient = Obstacle.cactusVolumeList[Math.round(Math.random())]
+
+    // 约束初期大小
+    Game.currentSpeed < 10 &&
+      ['CACTUS_FOUR', 'CACTUS_THREE'].includes(kindType) &&
+      (coefficient = 0.6)
+
     if (this.isCactus) {
-      const coefficient = Obstacle.cactusVolumeList[Math.round(Math.random())]
       this.dimensions.height *= coefficient
       this.dimensions.width *= coefficient
       this.Y =
@@ -77,9 +136,14 @@ export default class Obstacle {
 
     this.gap = this.getGap()
     this.gap > Game.config.CANVAS_WIDTH && (this.gap = Game.config.CANVAS_WIDTH)
-    this.collisionBoxs = [
-      new CollisionBox(this.X, this.Y, this.dimensions.width, this.dimensions.height)
-    ]
+    this.collisionBoxs = this.kindCollisionBoxMap[kindType].map(item => {
+      return new CollisionBox(
+        this.X + Math.ceil(item.XScale * coefficient),
+        this.Y + Math.ceil(item.YScale * coefficient),
+        Math.ceil(item.width * coefficient),
+        Math.ceil(item.height * coefficient)
+      )
+    })
   }
   /**
    * 绘制地面
@@ -103,6 +167,17 @@ export default class Obstacle {
    * @param speed
    */
   update(deltaTime: number) {
+    if (!this.isCactus) {
+      this.cumulativeTime += deltaTime
+      if (this.cumulativeTime - 5000) {
+        console.log('触发')
+        // bug遗留
+        this.cumulativeTime = 0
+        this.currentSpriteIndex = this.currentSpriteIndex ? 0 : 1
+        this.sprite = Obstacle.kindSpriteMap['PTERODACTYL'][this.currentSpriteIndex]
+      }
+    }
+
     const oldX = this.X
     const oldY = this.Y
     const increment = Math.floor(
@@ -113,7 +188,7 @@ export default class Obstacle {
       this.draw()
       this.collisionBoxs.forEach(box => {
         box.setPosition(box.X + this.X - oldX, box.Y + this.Y - oldY)
-        box.draw()
+        // box.draw()
       })
     }
   }

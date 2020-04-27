@@ -17,10 +17,10 @@ export default class CollisionBox {
   ) {
     // this.draw()
   }
-  // draw() {
-  //   Game.CANVASCTX.lineWidth = 3
-  //   Game.CANVASCTX.strokeStyle = '#990000'
-  //   Game.CANVASCTX.strokeRect(this.X, this.Y, this.WIDTH, this.HEIGHT)
+  // draw(canvasCtx: CanvasRenderingContext2D) {
+  //   canvasCtx.lineWidth = 3
+  //   canvasCtx.strokeStyle = '#990000'
+  //   canvasCtx.strokeRect(this.X, this.Y, this.WIDTH, this.HEIGHT)
   // }
   /**
    * 设置盒子体积

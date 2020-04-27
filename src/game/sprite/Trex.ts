@@ -69,33 +69,38 @@ export default class Trex {
 
   readonly behaviorCollsionBoxMap = {
     WAITING: [
-      new CollisionBox(32, 218, 20, 40),
-      new CollisionBox(50, 220, 34, 60),
-      new CollisionBox(84, 220, 10, 35),
-      new CollisionBox(95, 220, 6, 20),
-      new CollisionBox(72, 188, 44, 35)
+      new CollisionBox(32, 220, 20, 28),
+      new CollisionBox(50, 220, 34, 56),
+      new CollisionBox(84, 220, 10, 30),
+      new CollisionBox(95, 220, 4, 16),
+      new CollisionBox(72, 190, 42, 30)
     ],
     RUNNING: [
-      new CollisionBox(32, 218, 20, 40),
-      new CollisionBox(50, 220, 34, 60),
-      new CollisionBox(84, 220, 10, 35),
-      new CollisionBox(95, 220, 6, 20),
-      new CollisionBox(72, 188, 44, 35)
+      new CollisionBox(32, 220, 20, 28),
+      new CollisionBox(50, 220, 34, 56),
+      new CollisionBox(84, 220, 10, 30),
+      new CollisionBox(95, 220, 4, 16),
+      new CollisionBox(72, 190, 42, 30)
     ],
     JUMPING: [
-      new CollisionBox(32, 218, 20, 40),
-      new CollisionBox(50, 220, 34, 60),
-      new CollisionBox(84, 220, 10, 35),
-      new CollisionBox(95, 220, 6, 20),
-      new CollisionBox(72, 188, 44, 35)
+      new CollisionBox(32, 220, 20, 28),
+      new CollisionBox(50, 220, 34, 56),
+      new CollisionBox(84, 220, 10, 30),
+      new CollisionBox(95, 220, 4, 16),
+      new CollisionBox(72, 190, 42, 30)
     ],
-    DUCKING: [new CollisionBox(this.X, this.Y, 118, 60)],
+    DUCKING: [
+      new CollisionBox(32, 224, 20, 26),
+      new CollisionBox(53, 226, 22, 50),
+      new CollisionBox(76, 230, 24, 38),
+      new CollisionBox(100, 230, 40, 26)
+    ],
     CRASHED: [
-      new CollisionBox(32, 218, 20, 40),
-      new CollisionBox(50, 220, 34, 60),
-      new CollisionBox(84, 220, 10, 35),
-      new CollisionBox(95, 220, 6, 20),
-      new CollisionBox(72, 188, 44, 35)
+      new CollisionBox(32, 220, 20, 28),
+      new CollisionBox(50, 220, 34, 56),
+      new CollisionBox(84, 220, 10, 30),
+      new CollisionBox(95, 220, 4, 16),
+      new CollisionBox(72, 190, 42, 30)
     ]
   }
 

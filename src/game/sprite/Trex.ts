@@ -13,7 +13,6 @@ import cloneDeep from 'lodash/cloneDeep'
  */
 export default class Trex {
   // 小恐龙的精灵图位置
-  // static sprite: Sprite = { X: 802, Y: 2, WIDTH: 150, HEIGHT: 100 }
   static sprite: Sprite = { X: 1942, Y: 2, WIDTH: 88, HEIGHT: 94 }
 
   /**
@@ -32,10 +31,6 @@ export default class Trex {
   }
   // 精灵各类行为帧序列
   static behavior = {
-    // WAITING: [
-    //   { X: 802, Y: 2 },
-    //   { X: 802, Y: 2 }
-    // ],
     WAITING: [
       { X: 1678, Y: 2 },
       { X: 1766, Y: 2 }
@@ -73,39 +68,34 @@ export default class Trex {
   Y = this.baseY // 角色的Y坐标
 
   readonly behaviorCollsionBoxMap = {
-    // WAITING: [
-    //   new CollisionBox(32, 206, 14, 38),
-    //   new CollisionBox(48, 182, 15, 94),
-    //   new CollisionBox(66, 200, 30, 46),
-    //   new CollisionBox(98, 182, 15, 94),
-    //   new CollisionBox(120, 192, 26, 50),
-    //   new CollisionBox(148, 182, 16, 94),
-    //   new CollisionBox(168, 202, 14, 46)
-    // ],
     WAITING: [
       new CollisionBox(32, 218, 20, 40),
       new CollisionBox(50, 220, 34, 60),
-      new CollisionBox(84, 220, 20, 40),
-      new CollisionBox(72, 188, 44, 40)
+      new CollisionBox(84, 220, 10, 35),
+      new CollisionBox(95, 220, 6, 20),
+      new CollisionBox(72, 188, 44, 35)
     ],
     RUNNING: [
       new CollisionBox(32, 218, 20, 40),
       new CollisionBox(50, 220, 34, 60),
-      new CollisionBox(84, 220, 20, 40),
-      new CollisionBox(72, 188, 44, 40)
+      new CollisionBox(84, 220, 10, 35),
+      new CollisionBox(95, 220, 6, 20),
+      new CollisionBox(72, 188, 44, 35)
     ],
     JUMPING: [
       new CollisionBox(32, 218, 20, 40),
       new CollisionBox(50, 220, 34, 60),
-      new CollisionBox(84, 220, 20, 40),
-      new CollisionBox(72, 188, 44, 40)
+      new CollisionBox(84, 220, 10, 35),
+      new CollisionBox(95, 220, 6, 20),
+      new CollisionBox(72, 188, 44, 35)
     ],
     DUCKING: [new CollisionBox(this.X, this.Y, 118, 60)],
     CRASHED: [
       new CollisionBox(32, 218, 20, 40),
       new CollisionBox(50, 220, 34, 60),
-      new CollisionBox(84, 220, 20, 40),
-      new CollisionBox(72, 188, 44, 40)
+      new CollisionBox(84, 220, 10, 35),
+      new CollisionBox(95, 220, 6, 20),
+      new CollisionBox(72, 188, 44, 35)
     ]
   }
 
@@ -160,7 +150,7 @@ export default class Trex {
 
     this.collisionBoxs.forEach(box => {
       box.setPosition(box.X + differenceX, box.Y + differenceY)
-      box.draw()
+      // box.draw()
     })
   }
 
@@ -187,9 +177,9 @@ export default class Trex {
     )
   }
 
-  drawCollisionBox() {
-    // this.collisionBoxs.forEach(item => item.draw())
-  }
+  // drawCollisionBox() {
+  //   this.collisionBoxs.forEach(item => item.draw())
+  // }
 
   /**
    * 等待眨眼序列

@@ -169,9 +169,7 @@ export default class Obstacle {
   update(deltaTime: number) {
     if (!this.isCactus) {
       this.cumulativeTime += deltaTime
-      if (this.cumulativeTime - 5000) {
-        console.log('触发')
-        // bug遗留
+      if (this.cumulativeTime - 600 > 0) {
         this.cumulativeTime = 0
         this.currentSpriteIndex = this.currentSpriteIndex ? 0 : 1
         this.sprite = Obstacle.kindSpriteMap['PTERODACTYL'][this.currentSpriteIndex]
@@ -188,7 +186,7 @@ export default class Obstacle {
       this.draw()
       this.collisionBoxs.forEach(box => {
         box.setPosition(box.X + this.X - oldX, box.Y + this.Y - oldY)
-        // box.draw()
+        box.draw()
       })
     }
   }

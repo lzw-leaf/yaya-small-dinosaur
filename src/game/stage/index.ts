@@ -23,7 +23,6 @@ export default class Stage {
     MAX_CLOUDS: 6 //云朵最大数量
   }
 
-  // obstacleList: Obstacle[] = []
   static isNight = true
 
   moon: Moon
@@ -95,7 +94,7 @@ export default class Stage {
     if (CANVAS_WIDTH - lastObstacle.X > lastObstacle.gap && Math.random() > 0.9) {
       this.obstacleList.push(new Obstacle(this.canvasCtx))
     }
-    this.obstacleList.filter(obstacle => !obstacle.isHide)
+    this.obstacleList = this.obstacleList.filter(obstacle => !obstacle.isHide)
   }
   updateCloudList(deltaTime: number) {
     // 执行过程产生的时间*每毫秒的云基础速度*当前速度
@@ -132,5 +131,11 @@ export default class Stage {
   }
   addCould() {
     this.cloudList.push(new Cloud(this.canvasCtx))
+  }
+
+  reSet() {
+    this.obstacleList = []
+    this.starList = []
+    this.init()
   }
 }

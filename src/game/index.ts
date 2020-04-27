@@ -17,7 +17,6 @@ export default class Game {
   }
   // 全局传递速度
   static currentSpeed = Game.config.INIT_SPEED
-  static CANVASCTX: CanvasRenderingContext2D
 
   stage: Stage // 游戏舞台
   distanceMeter: DistanceMeter //仪表盘
@@ -32,16 +31,11 @@ export default class Game {
 
   // 动画请求Id
   reqFrameId = 0
-  waitStartTimeout = 0
 
   constructor(
     public canvasCtx: CanvasRenderingContext2D,
     options: Partial<typeof Game.config>
   ) {
-    // 临时
-    Game.CANVASCTX = this.canvasCtx
-    console.log(Game.CANVASCTX)
-
     Game.config = { ...Game.config, ...options }
     this.stage = new Stage(this.canvasCtx)
     this.tRex = new Trex(this.canvasCtx)
@@ -60,7 +54,7 @@ export default class Game {
     const now = getTimeStamp()
     const deltaTime = now - (this.consumeTime || now)
     this.consumeTime = now
-    this.clearCanvas()
+    this.status !== 'CRASHED' && this.clearCanvas()
     if (this.status === 'BOOTING') {
       if (this.tRex.status === 'RUNNING') {
         this.stage.ground.gameBoot()
@@ -83,15 +77,17 @@ export default class Game {
       let increaseSpeed = 2 * (this.consumeTime / 10000)
       increaseSpeed > 24 && (increaseSpeed = 24)
       Game.currentSpeed = Game.config.INIT_SPEED + increaseSpeed
+      const readyObstacle = this.stage.obstacleList.find(
+        item => item.X + item.dimensions.width > this.tRex.X
+      )
+      // 碰撞判断
+      readyObstacle &&
+        this.rule.detectCollisionList(
+          this.tRex.collisionBoxs,
+          readyObstacle.collisionBoxs
+        )
     }
     this.tRex.update(deltaTime)
-    const readyObstacle = this.stage.obstacleList.find(
-      item => item.X + item.dimensions.width > this.tRex.X
-    )
-    // 碰撞判断
-    readyObstacle &&
-      this.rule.detectCollisionList(this.tRex.collisionBoxs, readyObstacle.collisionBoxs)
-
     // over判断
     this.status !== 'CRASHED' && this.scheduleNextUpdate()
   }
@@ -111,20 +107,30 @@ export default class Game {
   }
 
   onCrashed() {
-    cancelAnimationFrame(this.reqFrameId)
     this.status = 'CRASHED'
     this.tRex.status = 'CRASHED'
-    console.log('游戏结束')
+    cancelAnimationFrame(this.reqFrameId)
+    this.scheduleNextUpdate()
+    this.rule.gameOver(this.canvasCtx)
+  }
+  reSet() {
+    this.clearCanvas()
+    this.setSpeed(Game.config.INIT_SPEED)
+    this.status = 'PLAYING'
+    this.consumeTime = 0
+    this.tRex.reSet()
+    this.stage.reSet()
+    this.distanceMeter.reSet()
+    this.scheduleNextUpdate()
   }
   onClick() {
-    Game.config.PLAYER_COUNT = 2
+    this.status === 'CRASHED' && this.reSet()
   }
 
   onkeydown(e: KeyboardEvent) {
     if ([87, 38, 32].includes(e.keyCode)) {
       if (this.status === 'WAITING') {
         this.status = 'BOOTING'
-        clearTimeout(this.waitStartTimeout)
         this.scheduleNextUpdate()
       }
 

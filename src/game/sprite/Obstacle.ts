@@ -115,7 +115,7 @@ export default class Obstacle {
       'CACTUS_FOUR',
       'PTERODACTYL'
     ]
-    const kindType = kindTypeList[getRandomNum(3, 4)]
+    const kindType = kindTypeList[getRandomNum(0, 4)]
     this.sprite = Obstacle.kindSpriteMap[kindType][0]
     this.dimensions.height = this.sprite.HEIGHT
     this.dimensions.width = this.sprite.WIDTH
@@ -142,6 +142,7 @@ export default class Obstacle {
     this.gap > Game.config.CANVAS_WIDTH && (this.gap = Game.config.CANVAS_WIDTH)
     this.collisionBoxs = this.setCollisionBoxs(kindType, coefficient)
   }
+
   /**
    * 绘制地面
    */
@@ -173,7 +174,6 @@ export default class Obstacle {
         this.collisionBoxs = this.setCollisionBoxs('PTERODACTYL', 1)
       }
     }
-
     const oldX = this.X
     const oldY = this.Y
     const increment = Math.floor(
@@ -182,10 +182,9 @@ export default class Obstacle {
     if (!this.isHide) {
       this.X -= increment
       this.draw()
-      this.collisionBoxs.forEach(box => {
+      this.collisionBoxs.forEach(box =>
         box.setPosition(box.X + this.X - oldX, box.Y + this.Y - oldY)
-        // box.draw()
-      })
+      )
     }
   }
 

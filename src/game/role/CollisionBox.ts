@@ -1,4 +1,4 @@
-import Game from '..'
+// import Game from '..'
 
 /**
  * Collision box
@@ -17,19 +17,17 @@ export default class CollisionBox {
   ) {
     // this.draw()
   }
-  draw() {
-    Game.CANVASCTX.lineWidth = 3
-    Game.CANVASCTX.strokeStyle = '#990000'
-    Game.CANVASCTX.strokeRect(this.X, this.Y, this.WIDTH, this.HEIGHT)
-  }
+  // draw() {
+  //   Game.CANVASCTX.lineWidth = 3
+  //   Game.CANVASCTX.strokeStyle = '#990000'
+  //   Game.CANVASCTX.strokeRect(this.X, this.Y, this.WIDTH, this.HEIGHT)
+  // }
   /**
    * 设置盒子体积
    * @param width
    * @param height
    */
-  setDimensions(width: number, height: number) {
-    console.log(width, height)
-  }
+  // setDimensions(width: number, height: number) {}
 
   /**
    * 设置盒子坐标

@@ -1,6 +1,7 @@
 import imageSprite from '@/game/sprite/ImageSprite'
 import { Sprite } from '../types'
 import Game from '..'
+import { eventBus } from '@/utils/eventBus'
 
 /**
  * 星星
@@ -14,8 +15,6 @@ export default class DistanceMeter {
   // 精灵图中数字的距离差
   static numberSpriteDistance = 20
   static wordsSprite: Sprite = { X: 1514, Y: 2, WIDTH: 20, HEIGHT: 18 }
-  // number     0    1    2
-  //   X      1294  +20  +20
   /**
    * 星星基本配置
    * @enum {number}
@@ -45,6 +44,7 @@ export default class DistanceMeter {
 
   constructor(public canvasCtx: CanvasRenderingContext2D) {
     this.highScore = parseInt(localStorage.highScore) || 0
+    eventBus.$on('crashed', () => this.contrastScore())
   }
 
   init() {
@@ -127,6 +127,21 @@ export default class DistanceMeter {
     )
     this.canvasCtx.globalAlpha = 1
   }
+  /**
+   * 对比替换当前分和历史最高分
+   */
+  contrastScore() {
+    if (DistanceMeter.currentMaxScore > this.highScore) {
+      this.highScore = DistanceMeter.currentMaxScore
+      localStorage.highScore = this.highScore
+    }
+  }
+
+  reSet() {
+    DistanceMeter.currentMaxScore = 0
+    this.init()
+  }
+
   /**
    * 计算获得实际分距离
    * @param deltaTime

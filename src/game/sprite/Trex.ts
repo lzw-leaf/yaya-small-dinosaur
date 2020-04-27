@@ -118,7 +118,6 @@ export default class Trex {
     this.Y = this.baseY
     this.collisionBoxs = cloneDeep(this.behaviorCollsionBoxMap.WAITING)
     this.draw()
-    // this.drawCollisionBox()
   }
 
   /**
@@ -137,6 +136,7 @@ export default class Trex {
       DUCKING: () => this.updateRunAndDuck(),
       CRASHED: () => this.updateCrashed()
     }
+
     statusUpdateMap[this.status]()
     this.draw()
 
@@ -150,7 +150,6 @@ export default class Trex {
 
     this.collisionBoxs.forEach(box => {
       box.setPosition(box.X + differenceX, box.Y + differenceY)
-      // box.draw()
     })
   }
 
@@ -175,30 +174,6 @@ export default class Trex {
       spriteWidth,
       spriteHeight
     )
-  }
-
-  // drawCollisionBox() {
-  //   this.collisionBoxs.forEach(item => item.draw())
-  // }
-
-  /**
-   * 等待眨眼序列
-   */
-  startWait() {
-    // 设置眨眼
-    this.isWaitBlik = true
-    this.blinkDelay = Math.ceil(Math.random() * Trex.config.BLINK_TIMING)
-    this.blinkTimeout = setTimeout(() => {
-      this.currentBehaviorIndex = 1
-      this.draw()
-      setTimeout(() => {
-        this.isWaitBlik = false
-        this.currentBehaviorIndex = 0
-        this.draw()
-        // this.drawCollisionBox()
-        this.startWait()
-      }, 200)
-    }, this.blinkDelay)
   }
 
   /**
@@ -253,6 +228,29 @@ export default class Trex {
   }
 
   /**
+   * 等待眨眼序列
+   */
+  startWait() {
+    // 设置眨眼
+    this.isWaitBlik = true
+    this.blinkDelay = Math.ceil(Math.random() * Trex.config.BLINK_TIMING)
+    this.blinkTimeout = setTimeout(() => {
+      if (this.status !== 'WAITING') {
+        clearTimeout(this.blinkTimeout)
+        return
+      }
+      this.currentBehaviorIndex = 1
+      this.draw()
+      setTimeout(() => {
+        this.isWaitBlik = false
+        this.currentBehaviorIndex = 0
+        this.draw()
+        this.startWait()
+      }, 200)
+    }, this.blinkDelay)
+  }
+
+  /**
    * 跳跃按下指令
    */
   startJump() {
@@ -272,6 +270,11 @@ export default class Trex {
    * 闪避松开指令
    */
   endDuck() {
+    this.status = 'RUNNING'
+    this.Y = this.baseY
+  }
+
+  reSet() {
     this.status = 'RUNNING'
     this.Y = this.baseY
   }

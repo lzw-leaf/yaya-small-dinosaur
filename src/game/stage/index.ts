@@ -1,4 +1,3 @@
-// import Obstacle from './Obstacle'
 import Cloud from '../sprite/Cloud'
 import Ground from '../sprite/Ground'
 import Game from '..'

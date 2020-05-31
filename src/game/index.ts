@@ -74,9 +74,9 @@ export default class Game {
       this.distanceMeter.update(deltaTime)
 
       // 加速度
-      let increaseSpeed = 2 * (this.consumeTime / 10000)
+      let increaseSpeed = 2 * (deltaTime / 10000)
       increaseSpeed > 24 && (increaseSpeed = 24)
-      Game.currentSpeed = Game.config.INIT_SPEED + increaseSpeed
+      Game.currentSpeed += increaseSpeed
       const readyObstacle = this.stage.obstacleList.find(
         item => item.X + item.dimensions.width > this.tRex.X
       )

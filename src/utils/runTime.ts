@@ -1,5 +1,5 @@
 class RunTime {
-  private FPS = 60
+  private FPS = 120
 
   getFPS() {
     return this.FPS

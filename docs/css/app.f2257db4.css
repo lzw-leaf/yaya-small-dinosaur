@@ -1,0 +1,1 @@
+body{margin:0}:root{--bg-color:#fff}#app{width:100vw;height:100vh;display:-webkit-box;display:-ms-flexbox;display:flex;background:var(--bg-color);-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center}#app .app__game{width:600px;height:150px}
